@@ -30,11 +30,12 @@ logger = logging.getLogger(__name__)
 
 # Import iperf3 server fetcher (after logger defined)
 try:
-    from src.utils.iperf3_servers import fetch_iperf3_servers
+    from src.iperf3_servers import fetch_iperf3_servers
     IPERF3_FETCHER_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     IPERF3_FETCHER_AVAILABLE = False
     fetch_iperf3_servers = None
+    logger.warning(f"iperf3 fetcher import failed: {e}")
 
 logger = logging.getLogger(__name__)
 
