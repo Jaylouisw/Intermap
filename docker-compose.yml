@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  intermap:
+    # Use pre-built image (faster) or build from source
+    # image: yourusername/intermap:latest
+    build: .
+    container_name: intermap
+    ports:
+      - "5000:5000"  # API server
+      - "8000:8000"  # Web UI
+      - "5001:5001"  # IPFS API
+      - "4001:4001"  # IPFS Swarm
+    volumes:
+      - intermap-data:/home/intermap/.ipfs
+      - ./output:/app/output
+    environment:
+      - IPFS_PATH=/home/intermap/.ipfs
+    restart: unless-stopped
+    networks:
+      - intermap-network
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+volumes:
+  intermap-data:
+
+networks:
+  intermap-network:
+    driver: bridge

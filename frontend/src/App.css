@@ -1,0 +1,200 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #1a1a1a;
+  overflow: hidden;
+}
+
+.header {
+  background-color: #2d2d2d;
+  padding: 1rem 2rem;
+  border-bottom: 2px solid #00ff88;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #00ff88;
+  white-space: nowrap;
+}
+
+.traceroute-input {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 500px;
+}
+
+.traceroute-input input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background-color: #1a1a1a;
+  border: 1px solid #00ff88;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.traceroute-input input::placeholder {
+  color: #666;
+}
+
+.traceroute-input input:focus {
+  outline: none;
+  border-color: #00ffff;
+  box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+}
+
+.traceroute-input input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.traceroute-input button {
+  padding: 0.5rem 1.25rem;
+  background-color: #00ff88;
+  color: #1a1a1a;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.traceroute-input button:hover:not(:disabled) {
+  background-color: #00ffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.4);
+}
+
+.traceroute-input button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  color: #00ff88;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.graph-container {
+  flex: 1;
+  position: relative;
+  background-color: #0a0a0a;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.own-node-info {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: rgba(255, 0, 255, 0.15);
+  border: 2px solid #ff00ff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  color: #ff00ff;
+  font-weight: bold;
+  font-size: 0.9rem;
+  z-index: 100;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.own-node-info strong {
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff00ff;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 0, 255, 0.6);
+  }
+}
+
+.controls {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(45, 45, 45, 0.95);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #00ff88;
+  z-index: 100;
+}
+
+.controls h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #00ff88;
+}
+
+.controls button {
+  background-color: #00ff88;
+  color: #1a1a1a;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0.25rem 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.controls button:hover {
+  background-color: #00dd77;
+}
+
+.controls button:active {
+  background-color: #00bb66;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 1.5rem;
+  color: #00ff88;
+}
+
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 1.2rem;
+  color: #ff4444;
+  padding: 2rem;
+  text-align: center;
+}

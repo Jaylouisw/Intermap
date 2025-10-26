@@ -1,0 +1,86 @@
+# Node configuration
+node:
+  # Unique identifier for this node (leave empty for auto-generation)
+  id: ""
+  
+  # Traceroute settings
+  traceroute:
+    max_hops: 30  # Reduced for faster results
+    timeout: 2  # seconds per hop
+    interval: 300  # seconds between traceroute rounds (5 minutes)
+    auto_map_own_subnet: true  # Automatically map subnet of external IP
+    subnet_size: 28  # Subnet size to map (8-30): /28=14 IPs for faster testing
+  
+  # Mobility settings for devices that change location/IP
+  mobility:
+    cleanup_old_location: false  # Keep historical data (set true to clean up old subnet data)
+    detect_interval: 60  # seconds between IP change checks (default heartbeat)
+    
+  # Rate limiting disabled for comprehensive mapping
+  rate_limit:
+    max_traceroutes_per_hour: 0  # 0 = unlimited
+    max_concurrent_traceroutes: 10  # Allow more concurrent traces
+    enable_rate_limiting: false  # Disable rate limiting
+
+# IPFS configuration
+ipfs:
+  # IPFS API multiaddr
+  api_address: "/ip4/127.0.0.1/tcp/5001"
+  
+  # PubSub channels
+  channels:
+    discovery: "intermap-discovery"
+    topology: "intermap-topology"
+    verification: "intermap-verification"  # For dead IP verification requests
+  
+  # Publish interval for topology data
+  publish_interval: 600  # seconds (10 minutes)
+
+# Graph configuration
+graph:
+  # Output directory for GEXF files
+  output_dir: "./output"
+  
+  # Graph metadata
+  title: "Distributed Internet Topology Map"
+  description: "Collaborative network topology mapping"
+
+# Bandwidth testing configuration
+bandwidth:
+  # Enable automatic bandwidth testing
+  enabled: true
+  
+  # iperf3 settings
+  iperf3:
+    enabled: true
+    duration: 10  # seconds
+    interval: 7200  # seconds between tests (2 hours)
+    parallel_streams: 1
+    
+    # Public iperf3 servers to test against
+    public_servers:
+      - host: "ping.online.net"
+        port: 5201
+        location: "France"
+      - host: "iperf.he.net"
+        port: 5201
+        location: "USA"
+      - host: "speedtest.serverius.net"
+        port: 5002
+        location: "Netherlands"
+  
+  # speedtest-cli settings  
+  speedtest:
+    enabled: true
+    interval: 14400  # seconds between tests (4 hours)
+  
+  # Bandwidth test rate limiting
+  rate_limit:
+    max_tests_per_hour: 5
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "topology_node.log"
+  max_size_mb: 10
+  backup_count: 3

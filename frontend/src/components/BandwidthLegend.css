@@ -1,0 +1,88 @@
+.bandwidth-legend {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: rgba(45, 45, 45, 0.95);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #00ff88;
+  min-width: 200px;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.bandwidth-legend.minimized {
+  padding: 0.5rem 1rem;
+}
+
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bandwidth-legend h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #00ff88;
+}
+
+.minimize-btn {
+  background: transparent;
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.minimize-btn:hover {
+  background-color: #00ff88;
+  color: #1a1a1a;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-color {
+  width: 30px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.legend-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.legend-label strong {
+  color: #ffffff;
+}
+
+.legend-label span {
+  color: #aaaaaa;
+  font-size: 0.75rem;
+}
+
+.legend-note {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #555;
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.4;
+}
