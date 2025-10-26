@@ -929,6 +929,9 @@ class TopologyNode:
                                 )
                             
                             logger.info(f"Traceroute complete: {len(hops)} hops to {target_ip}")
+                            
+                            # Update topology visualization after EVERY successful traceroute
+                            await self._publish_topology()
                         else:
                             # Traceroute failed - flag for verification
                             logger.warning(f"Traceroute failed to {target_ip}")
