@@ -95,6 +95,7 @@ docker run -d \
 docker run -d \
   --name intermap \
   -p 8000:8000 \
+  -p 5000:5000 \
   -p 4001:4001 \
   -p 5201:5201 \
   --cap-add NET_ADMIN \

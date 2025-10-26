@@ -1,4 +1,4 @@
-# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide<!--
+# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide<!--
 
 
 
@@ -14,7 +14,7 @@ Get Intermap running in 60 seconds!
 
 
 
-**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Intermap - Quick Start Guide
+**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!
 
 
 
@@ -30,7 +30,7 @@ Get Intermap running in 60 seconds!
 
 docker run -d \
 
-  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Copyright (c) 2025 Jay Wenden
+  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Intermap - Quick Start Guide
 
   --network host \
 
@@ -46,7 +46,7 @@ docker run -d \
 
 **Windows/Mac:**
 
-**Linux (best accuracy):**## 🐳 Docker (Recommended)Licensed under CC-BY-NC-SA 4.0
+**Linux (best accuracy):**## 🐳 Docker (Recommended)
 
 ```bash
 
@@ -56,18 +56,89 @@ docker run -d \
 
   -p 8000:8000 \```bash
 
-  -p 4001:4001 \
+  -p 5000:5000 \
 
-  -p 5201:5201 \docker run -d \
+  -p 4001:4001 \docker run -d \
+
+  -p 5201:5201 \
+
+  --cap-add NET_ADMIN \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Copyright (c) 2025 Jay Wenden
+
+  --cap-add NET_RAW \
+
+  jaylouisw/intermap:latest  --network host \
+
+```
 
   --cap-add NET_ADMIN \
 
-  --cap-add NET_RAW \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))----->
+Open: **http://localhost:8000**
 
-  jaylouisw/intermap:latest
+  --cap-add NET_RAW \
 
-```  --network host \
+---
 
+  jaylouisw/intermap:latest### Run It
+
+## 🛑 Stop/Remove
+
+```
+
+```bash
+
+docker stop intermap
+
+docker rm intermap
+
+```**Windows/Mac:**
+
+
+
+---**Linux (best accuracy):**## 🐳 Docker (Recommended)Licensed under CC-BY-NC-SA 4.0
+
+
+
+## Advanced```bash
+
+
+
+Build from source:docker run -d \
+
+
+
+```bash  --name intermap \
+
+git clone https://github.com/jaylouisw/intermap.git
+
+cd intermap  -p 8000:8000 \```bash
+
+docker build -t intermap:local .
+
+  -p 4001:4001 \
+
+# Linux
+
+docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW intermap:local  -p 5201:5201 \docker run -d \
+
+
+
+# Windows/Mac  --cap-add NET_ADMIN \
+
+docker run -d --name intermap -p 8000:8000 -p 5000:5000 -p 4001:4001 -p 5201:5201 --cap-add NET_ADMIN --cap-add NET_RAW intermap:local
+
+```  --cap-add NET_RAW \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))----->
+
+
+
+See [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for details.  jaylouisw/intermap:latest
+
+
+
+---```  --network host \
+
+
+
+**Created by Jay Wenden** | [GitHub](https://github.com/jaylouisw/intermap) | [Docker Hub](https://hub.docker.com/r/jaylouisw/intermap)
 
 
 Open: **http://localhost:8000**  --cap-add NET_ADMIN \
