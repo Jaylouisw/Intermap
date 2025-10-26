@@ -81,7 +81,7 @@ ipfs daemon
 python -m src.main
 ```
 
-The web interface will be available at http://localhost:8000
+The web interface will be available at http://localhost:5000
 
 ### Project Structure
 

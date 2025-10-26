@@ -135,7 +135,7 @@ cd intermap
 docker-compose up -d
 ```
 
-Access at http://localhost:8000
+Access at http://localhost:5000
 
 ### From Source
 
@@ -480,7 +480,7 @@ python src/main.py
        server_name your-domain.com;
 
        location / {
-           proxy_pass http://localhost:8000;
+           proxy_pass http://localhost:5000;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
            proxy_set_header Connection 'upgrade';

@@ -94,7 +94,6 @@ docker run -d \
 # Windows/Mac (use bridge networking)
 docker run -d \
   --name intermap \
-  -p 8000:8000 \
   -p 5000:5000 \
   -p 4001:4001 \
   -p 5201:5201 \
@@ -103,7 +102,7 @@ docker run -d \
   jaylouisw/intermap:latest
 ```
 
-**That's it!** Open **http://localhost:8000** in your browser.
+**That's it!** Open **http://localhost:5000** in your browser.
 
 ### 🛑 Stop/Remove
 
@@ -128,7 +127,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup.
 
 ## 🎮 Usage
 
-Once running, open **http://localhost:8000** in your browser.
+Once running, open **http://localhost:5000** in your browser.
 
 ### What You'll See
 

@@ -1,4 +1,4 @@
-# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide<!--
+# ⚡ Intermap - Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide# ⚡ Quick Start Guide<!--
 
 
 
@@ -30,7 +30,7 @@ Get Intermap running in 60 seconds!
 
 docker run -d \
 
-  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Intermap - Quick Start Guide
+  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!
 
   --network host \
 
@@ -54,244 +54,539 @@ docker run -d \
 
   --name intermap \
 
-  -p 8000:8000 \```bash
-
-  -p 5000:5000 \
-
-  -p 4001:4001 \docker run -d \
-
-  -p 5201:5201 \
-
-  --cap-add NET_ADMIN \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Copyright (c) 2025 Jay Wenden
-
-  --cap-add NET_RAW \
-
-  jaylouisw/intermap:latest  --network host \
-
-```
-
-  --cap-add NET_ADMIN \
-
-Open: **http://localhost:8000**
-
-  --cap-add NET_RAW \
-
----
-
-  jaylouisw/intermap:latest### Run It
-
-## 🛑 Stop/Remove
-
-```
-
-```bash
-
-docker stop intermap
-
-docker rm intermap
-
-```**Windows/Mac:**
-
-
-
----**Linux (best accuracy):**## 🐳 Docker (Recommended)Licensed under CC-BY-NC-SA 4.0
-
-
-
-## Advanced```bash
-
-
-
-Build from source:docker run -d \
-
-
-
-```bash  --name intermap \
-
-git clone https://github.com/jaylouisw/intermap.git
-
-cd intermap  -p 8000:8000 \```bash
-
-docker build -t intermap:local .
+  -p 5000:5000 \```bash
 
   -p 4001:4001 \
 
-# Linux
+  -p 5201:5201 \docker run -d \
 
-docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW intermap:local  -p 5201:5201 \docker run -d \
+  --cap-add NET_ADMIN \
 
-
-
-# Windows/Mac  --cap-add NET_ADMIN \
-
-docker run -d --name intermap -p 8000:8000 -p 5000:5000 -p 4001:4001 -p 5201:5201 --cap-add NET_ADMIN --cap-add NET_RAW intermap:local
-
-```  --cap-add NET_RAW \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))----->
-
-
-
-See [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for details.  jaylouisw/intermap:latest
-
-
-
----```  --network host \
-
-
-
-**Created by Jay Wenden** | [GitHub](https://github.com/jaylouisw/intermap) | [Docker Hub](https://hub.docker.com/r/jaylouisw/intermap)
-
-
-Open: **http://localhost:8000**  --cap-add NET_ADMIN \
-
-
-
----  --cap-add NET_RAW \
-
-
-
-## 🛑 Stop/Remove  jaylouisw/intermap:latest### Run It
-
-
-
-```bash```
-
-docker stop intermap
-
-docker rm intermap
-
-```
-
-**Windows/Mac:**
-
----
-
-**Linux (best accuracy):**## 🐳 Docker (Easiest - Recommended)# 🗺️ Intermap - Quick Start Guide
-
-## Advanced
-
-```bash
-
-Build from source:
-
-docker run -d \```bash
-
-```bash
-
-git clone https://github.com/jaylouisw/intermap.git  --name intermap \
-
-cd intermap
-
-docker build -t intermap:local .  -p 8000:8000 \docker run -d \
-
-
-
-# Linux  -p 4001:4001 \
-
-docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW intermap:local
-
-  -p 5201:5201 \  --name intermap \
-
-# Windows/Mac
-
-docker run -d --name intermap -p 8000:8000 -p 4001:4001 -p 5201:5201 --cap-add NET_ADMIN --cap-add NET_RAW intermap:local  --cap-add NET_ADMIN \
-
-```
-
-  --cap-add NET_RAW \  --network host \### Prerequisites*Created by Jay Wenden*
-
-See [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+  --cap-add NET_RAW \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Intermap - Quick Start Guide
 
   jaylouisw/intermap:latest
 
----
-
-```  --cap-add NET_ADMIN \
-
-**Created by Jay Wenden** | [GitHub](https://github.com/jaylouisw/intermap) | [Docker Hub](https://hub.docker.com/r/jaylouisw/intermap)
+```  --network host \
 
 
 
-### Access the UI  --cap-add NET_RAW \
+### Access the UI  --cap-add NET_ADMIN \
 
 
 
-Open: **http://localhost:8000**  jaylouisw/intermap:latest
+Open: **http://localhost:5000**  --cap-add NET_RAW \
 
 
 
-You're now mapping the internet! 🌐```- Docker installed ([Get Docker](https://docs.docker.com/get-docker/))## Run with Docker (Easiest)
+You're now mapping the internet! 🌐  jaylouisw/intermap:latest### Run It
 
 
 
-### Stop/Remove
+---```
 
 
 
-```bash**Windows/Mac:**- That's it!
+## 🛑 Stop/Remove
+
+
+
+```bash**Windows/Mac:**
 
 docker stop intermap
 
-docker rm intermap```bash
+docker rm intermap**Linux (best accuracy):**## 🐳 Docker (Recommended)
 
 ```
 
-docker run -d \### 1. Pull and run the image:
+```bash
+
+---
+
+docker run -d \
+
+## 🐙 Docker Compose
+
+  --name intermap \
+
+```bash
+
+git clone https://github.com/jaylouisw/intermap.git  -p 8000:8000 \```bash
+
+cd intermap
+
+docker-compose up -d  -p 5000:5000 \
+
+```
+
+  -p 4001:4001 \docker run -d \
+
+Open: **http://localhost:5000**
+
+  -p 5201:5201 \
+
+---
+
+  --cap-add NET_ADMIN \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))---Get Intermap running in 60 seconds!Copyright (c) 2025 Jay Wenden
+
+## 💻 From Source (Development)
+
+  --cap-add NET_RAW \
+
+Only if you want to modify the code:
+
+  jaylouisw/intermap:latest  --network host \
+
+### Prerequisites
+
+```
+
+- Python 3.9+
+
+- Node.js 16+  --cap-add NET_ADMIN \
+
+- IPFS daemon ([Install IPFS](https://docs.ipfs.io/install/))
+
+Open: **http://localhost:8000**
+
+### Setup
+
+  --cap-add NET_RAW \
+
+```bash
+
+# Clone repository---
+
+git clone https://github.com/jaylouisw/intermap.git
+
+cd intermap  jaylouisw/intermap:latest### Run It
+
+
+
+# Create virtual environment## 🛑 Stop/Remove
+
+python -m venv .venv
+
+```
+
+# Activate (Windows)
+
+.venv\Scripts\activate```bash
+
+
+
+# Activate (Linux/Mac)docker stop intermap
+
+source .venv/bin/activate
+
+docker rm intermap
+
+# Install Python dependencies
+
+pip install -r requirements.txt```**Windows/Mac:**
+
+
+
+# Build frontend
+
+cd frontend
+
+npm install---**Linux (best accuracy):**## 🐳 Docker (Recommended)Licensed under CC-BY-NC-SA 4.0
+
+npm run build
+
+cd ..
+
+
+
+# Start IPFS (separate terminal)## Advanced```bash
+
+ipfs daemon
+
+
+
+# Run Intermap
+
+python src/main.pyBuild from source:docker run -d \
+
+```
+
+
+
+Open: **http://localhost:5000**
+
+```bash  --name intermap \
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup.
+
+git clone https://github.com/jaylouisw/intermap.git
+
+---
+
+cd intermap  -p 8000:8000 \```bash
+
+## 🎮 What You'll See
+
+docker build -t intermap:local .
+
+### Initial Startup (First 2-3 minutes)
+
+  -p 4001:4001 \
+
+1. **IPFS Initialization**: Node connects to IPFS network
+
+2. **Subnet Detection**: Automatically finds your /24 subnet# Linux
+
+3. **Ping Sweep**: Discovers live hosts (parallel, very fast!)
+
+4. **Traceroutes Begin**: Maps paths to:docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW intermap:local  -p 5201:5201 \docker run -d \
+
+   - Live subnet hosts
+
+   - Well-known targets (8.8.8.8, 1.1.1.1, etc.)
+
+   - Other Intermap nodes (once discovered)
+
+# Windows/Mac  --cap-add NET_ADMIN \
+
+### Web Interface
+
+docker run -d --name intermap -p 8000:8000 -p 5000:5000 -p 4001:4001 -p 5201:5201 --cap-add NET_ADMIN --cap-add NET_RAW intermap:local
+
+- **Nodes**: Circles representing routers/hosts
+
+- **Edges**: Connections showing network paths```  --cap-add NET_RAW \  --name intermap \**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))----->
+
+  - **Length**: Based on latency (shorter = faster)
+
+  - **Color**: Based on bandwidth
+
+    - 🔵 Cyan/Blue: Multi-gigabit (10+ Gbps)
+
+    - 🟢 Green: Gigabit+ (1-10 Gbps)See [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for details.  jaylouisw/intermap:latest
+
+    - 🟡 Yellow: Fast (100 Mbps - 1 Gbps)
+
+    - 🟠 Orange: Medium (10-100 Mbps)
+
+    - 🔴 Red: Slow (<10 Mbps)
+
+---```  --network host \
+
+### Click Any Node
+
+
+
+- See IP address and hostname
+
+- View latency measurements**Created by Jay Wenden** | [GitHub](https://github.com/jaylouisw/intermap) | [Docker Hub](https://hub.docker.com/r/jaylouisw/intermap)
+
+- Check bandwidth (if tested)
+
+- See connected neighbors
+
+Open: **http://localhost:8000**  --cap-add NET_ADMIN \
+
+---
+
+
+
+## 🔧 Basic Commands
+
+---  --cap-add NET_RAW \
+
+### View Logs
+
+
+
+```bash
+
+docker logs -f intermap## 🛑 Stop/Remove  jaylouisw/intermap:latest### Run It
+
+```
+
+
+
+### Check IPFS Status
+
+```bash```
+
+```bash
+
+docker exec intermap ipfs iddocker stop intermap
+
+docker exec intermap ipfs swarm peers
+
+```docker rm intermap
+
+
+
+### Run Specific Traceroute```
+
+
+
+```bash**Windows/Mac:**
+
+docker exec intermap python -m src.cli traceroute 1.1.1.1
+
+```---
+
+
+
+### Test Bandwidth**Linux (best accuracy):**## 🐳 Docker (Easiest - Recommended)# 🗺️ Intermap - Quick Start Guide
+
+
+
+```bash## Advanced
+
+docker exec intermap python -m src.cli bandwidth 8.8.8.8
+
+``````bash
+
+
+
+### Export MapBuild from source:
+
+
+
+```bashdocker run -d \```bash
+
+docker exec intermap python -m src.cli export --format gexf
+
+``````bash
+
+
+
+---git clone https://github.com/jaylouisw/intermap.git  --name intermap \
+
+
+
+## 🛑 Stop/Removecd intermap
+
+
+
+```bashdocker build -t intermap:local .  -p 8000:8000 \docker run -d \
+
+# Stop container
+
+docker stop intermap
+
+
+
+# Remove container# Linux  -p 4001:4001 \
+
+docker rm intermap
+
+docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW intermap:local
+
+# Remove data volume (careful!)
+
+docker volume rm intermap_data  -p 5201:5201 \  --name intermap \
+
+```
+
+# Windows/Mac
+
+---
+
+docker run -d --name intermap -p 8000:8000 -p 4001:4001 -p 5201:5201 --cap-add NET_ADMIN --cap-add NET_RAW intermap:local  --cap-add NET_ADMIN \
+
+## ⚙️ Configuration
+
+```
+
+### Environment Variables
+
+  --cap-add NET_RAW \  --network host \### Prerequisites*Created by Jay Wenden*
+
+Edit before running:
+
+See [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+```bash
+
+docker run -d \  jaylouisw/intermap:latest
+
+  -e NODE_UPDATE_INTERVAL=300 \
+
+  -e TARGET_SUBNET="1.1.1.0/28" \---
+
+  -e LOG_LEVEL=INFO \
+
+  --name intermap \```  --cap-add NET_ADMIN \
+
+  jaylouisw/intermap:latest
+
+```**Created by Jay Wenden** | [GitHub](https://github.com/jaylouisw/intermap) | [Docker Hub](https://hub.docker.com/r/jaylouisw/intermap)
+
+
+
+### Config File
+
+
+
+Mount custom config:### Access the UI  --cap-add NET_RAW \
+
+
+
+```bash
+
+docker run -d \
+
+  -v $(pwd)/my-config.yaml:/app/config/default.yaml \Open: **http://localhost:8000**  jaylouisw/intermap:latest
+
+  --name intermap \
+
+  jaylouisw/intermap:latest
+
+```
+
+You're now mapping the internet! 🌐```- Docker installed ([Get Docker](https://docs.docker.com/get-docker/))## Run with Docker (Easiest)
+
+Example `my-config.yaml`:
+
+
+
+```yaml
+
+traceroute:### Stop/Remove
+
+  interval: 300
+
+  verify_reachable: true
+
+
+
+bandwidth:```bash**Windows/Mac:**- That's it!
+
+  enabled: true
+
+  interval: 3600docker stop intermap
+
+  sequential_only: true
+
+docker rm intermap```bash
+
+well_known_targets:
+
+  - 8.8.8.8```
+
+  - 1.1.1.1
+
+  - 9.9.9.9docker run -d \### 1. Pull and run the image:
+
+```
+
+---
 
 ---
 
   --name intermap \
 
+## ❓ Troubleshooting
+
 ## 🛠️ Build from Source (For Developers)
+
+### Container Won't Start
 
   -p 8000:8000 \### One Command to Rule Them All```bash
 
-Only if you want to modify the code:
-
-  -p 4001:4001 \
-
 ```bash
 
-git clone https://github.com/jaylouisw/intermap.git  -p 5201:5201 \docker run -d \
-
-cd intermap
-
-docker-compose up -d  --cap-add NET_ADMIN \
-
-```
-
-  --cap-add NET_RAW \**Linux:**  --network host \
-
-Open: **http://localhost:8000**
-
-  jaylouisw/intermap:latest
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup.
-
-``````bash  --cap-add NET_ADMIN \
-
----
-
-
-
-## 🔧 Troubleshooting
-
-### Access the UIdocker run -d \  --cap-add NET_RAW \
-
-### Container won't start
-
-
-
-```bash
-
-# Check logsOpen: **http://localhost:8000**  --name intermap \  --name intermap \
+# Check logsOnly if you want to modify the code:
 
 docker logs intermap
 
+  -p 4001:4001 \
 
+# Verify Docker version
+
+docker --version  # Should be 20.10+```bash
+
+```
+
+git clone https://github.com/jaylouisw/intermap.git  -p 5201:5201 \docker run -d \
+
+### Can't Access Web UI
+
+cd intermap
+
+- Check if port 5000 is available: `netstat -an | findstr 5000` (Windows) or `lsof -i :5000` (Mac/Linux)
+
+- Try different port: `-p 5001:5000`docker-compose up -d  --cap-add NET_ADMIN \
+
+- Check firewall settings
+
+```
+
+### Traceroute Not Working
+
+  --cap-add NET_RAW \**Linux:**  --network host \
+
+- Ensure `--cap-add NET_ADMIN --cap-add NET_RAW` flags are included
+
+- On Windows/Mac, some network operations may be limited by Docker DesktopOpen: **http://localhost:8000**
+
+
+
+### No Peers Found  jaylouisw/intermap:latest
+
+
+
+- Wait 2-3 minutes for IPFS to connectSee [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup.
+
+- Check IPFS status: `docker exec intermap ipfs swarm peers`
+
+- Ensure port 4001 is not blocked by firewall``````bash  --cap-add NET_ADMIN \
+
+
+
+### High CPU Usage---
+
+
+
+Normal during initial subnet scan (2-3 minutes). Should stabilize after that.
+
+
+
+---## 🔧 Troubleshooting
+
+
+
+## 📚 Next Steps### Access the UIdocker run -d \  --cap-add NET_RAW \
+
+
+
+- **[Full README](README.md)**: Learn about all features### Container won't start
+
+- **[Contributing](CONTRIBUTING.md)**: Help improve Intermap
+
+- **[Deployment](DEPLOY.md)**: Deploy to cloud platforms
+
+- **[Testing](TESTING.md)**: Run tests and CI
+
+```bash
+
+---
+
+# Check logsOpen: **http://localhost:8000**  --name intermap \  --name intermap \
+
+## 🆘 Need Help?
+
+docker logs intermap
+
+- **GitHub Issues**: [Report problems](https://github.com/jaylouisw/intermap/issues)
+
+- **Discussions**: [Ask questions](https://github.com/jaylouisw/intermap/discussions)
+
+- **Wiki**: [Check FAQ](https://github.com/jaylouisw/intermap/wiki)
 
 # Common issues:
 
+---
+
 # - Port already in use: change -p 8000:8000 to -p 8001:8000You're now mapping the internet! 🌐  --network host \  yourusername/intermap:latest
+
+**Happy mapping!** 🌐 You're now contributing to the global internet topology map!
 
 # - Permission denied: add --privileged flag
 
