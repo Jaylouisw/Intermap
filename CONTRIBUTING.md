@@ -78,7 +78,7 @@ pytest tests/
 ipfs daemon
 
 # Run the application
-python src/main.py
+python -m src.main
 ```
 
 The web interface will be available at http://localhost:8000

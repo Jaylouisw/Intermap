@@ -45,56 +45,32 @@ Name:  DOCKERHUB_TOKEN
 Value: [paste the token from step 1.1]
 ```
 
-### 1.3 Update Repository URLs
+### 1.3 Verify GitHub Actions Workflows
 
-Replace `jaylouisw` in these files with your actual GitHub/Docker Hub username:
+Intermap includes two automated workflows:
 
-```bash
-# Update README.md
-sed -i 's/jaylouisw/jaywendendev/g' README.md
+**Workflow 1: `docker-build.yml`**
+- Builds and pushes Docker images to Docker Hub
+- Triggers on: push to master/main, pull requests, tags
+- Platform: linux/amd64
+- Uses secrets: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN
 
-# Update all markdown files
-find . -name "*.md" -type f -exec sed -i 's/jaylouisw/jaywendendev/g' {} +
+**Workflow 2: `update-dockerhub-description.yml`**
+- Syncs README.md to Docker Hub overview page
+- Triggers on: changes to README.md
+- Keeps Docker Hub description up-to-date automatically
 
-# Windows PowerShell:
-Get-ChildItem -Recurse -Include *.md | ForEach-Object {
-    (Get-Content $_) -replace 'jaylouisw', 'jaywendendev' | Set-Content $_
-}
-```
+Both workflows are already configured and will trigger automatically when you push to master.
 
-### 1.4 Verify Workflow File
-
-Check `.github/workflows/docker-build.yml` exists. It should look like this:
-
-```yaml
-name: Build and Push Docker Image
-
-on:
-  push:
-    branches: [ main, master ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ main, master ]
-
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/intermap
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    # ... rest of workflow
-```
-
-### 1.5 Test the Integration
+### 1.4 Test the Integration
 
 ```bash
-# Commit and push
+# Commit and push to trigger workflows
 git add .
-git commit -m "chore: update repository URLs and setup CI"
+git commit -m "docs: update documentation"
 git push origin master
 
-# Watch the build
+# Watch the builds
 # Go to: https://github.com/jaylouisw/intermap/actions
 ```
 

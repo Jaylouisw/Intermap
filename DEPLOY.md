@@ -39,15 +39,19 @@ Intermap uses GitHub Actions to automatically build and push Docker images to Do
    
    **Secret 1:**
    - Name: `DOCKERHUB_USERNAME`
-   - Value: Your Docker Hub username (e.g., `jaywendendev`)
+   - Value: Your Docker Hub username (e.g., `jaylouisw`)
    
    **Secret 2:**
    - Name: `DOCKERHUB_TOKEN`
    - Value: The access token you copied from step 1
 
-3. **Verify GitHub Actions Workflow**
+3. **Verify GitHub Actions Workflows**
    
-   The workflow file `.github/workflows/docker-build.yml` should exist. If not, create it:
+   Two workflow files should exist:
+   - `.github/workflows/docker-build.yml` - Builds and pushes Docker images
+   - `.github/workflows/update-dockerhub-description.yml` - Syncs README to Docker Hub
+   
+   Both are triggered automatically on push to master.
 
    ```yaml
    name: Docker Build and Push
