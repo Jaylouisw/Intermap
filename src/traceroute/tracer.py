@@ -23,6 +23,17 @@ from src.utils import is_public_ip, filter_private_ips
 
 logger = logging.getLogger(__name__)
 
+# Try to import scapy for advanced traceroute methods
+try:
+    from scapy.all import IP, ICMP, TCP, sr1, conf
+    # Disable verbose output
+    conf.verb = 0
+    SCAPY_AVAILABLE = True
+    logger.info("Scapy available - will use ICMP with TCP SYN fallback for traceroute")
+except ImportError:
+    SCAPY_AVAILABLE = False
+    logger.warning("Scapy not available - will use system traceroute commands only")
+
 
 @dataclass
 class Hop:
@@ -59,10 +70,138 @@ class Traceroute:
         self.filter_private = filter_private
         self.verify_reachable = verify_reachable
         self.os_type = platform.system()
+        self.use_scapy = SCAPY_AVAILABLE
+        
+    def _trace_scapy_icmp(self, target: str) -> List[Hop]:
+        """
+        Perform ICMP traceroute using scapy.
+        
+        This is the preferred method - ICMP echo is the standard traceroute protocol.
+        Requires raw socket access (CAP_NET_ADMIN + CAP_NET_RAW on Linux).
+        
+        Args:
+            target: Target IP address
+            
+        Returns:
+            List of Hop objects
+        """
+        if not SCAPY_AVAILABLE:
+            return []
+            
+        hops = []
+        logger.debug(f"Starting ICMP traceroute to {target} (max {self.max_hops} hops)")
+        
+        for ttl in range(1, self.max_hops + 1):
+            try:
+                # Send ICMP echo request with specific TTL
+                pkt = IP(dst=target, ttl=ttl) / ICMP()
+                reply = sr1(pkt, timeout=self.timeout, verbose=0)
+                
+                if reply is None:
+                    # No response - hop timeout
+                    logger.debug(f"Hop {ttl}: * (timeout)")
+                    continue
+                
+                hop_ip = reply.src
+                
+                # Try to get hostname (quick lookup, no reverse DNS delay)
+                hostname = None
+                
+                # Calculate RTT (crude estimate from scapy timing)
+                rtt_ms = 0.0
+                if hasattr(reply, 'time') and hasattr(pkt, 'sent_time'):
+                    rtt_ms = (reply.time - pkt.sent_time) * 1000
+                
+                hops.append(Hop(
+                    hop_number=ttl,
+                    ip_address=hop_ip,
+                    hostname=hostname,
+                    rtt_ms=rtt_ms
+                ))
+                
+                logger.debug(f"Hop {ttl}: {hop_ip} ({rtt_ms:.2f}ms)")
+                
+                # Check if we've reached the target
+                if hop_ip == target or (reply.haslayer(ICMP) and reply[ICMP].type == 0):
+                    logger.debug(f"ICMP traceroute complete: reached target at hop {ttl}")
+                    break
+                    
+            except Exception as e:
+                logger.debug(f"Hop {ttl}: error - {e}")
+                continue
+        
+        return hops
+    
+    def _trace_scapy_tcp(self, target: str, dport: int = 80) -> List[Hop]:
+        """
+        Perform TCP SYN traceroute using scapy.
+        
+        This is a fallback method that works when ICMP is blocked.
+        TCP SYN packets don't require raw socket access and bypass ICMP filtering.
+        
+        Args:
+            target: Target IP address
+            dport: Destination port (default: 80 for HTTP)
+            
+        Returns:
+            List of Hop objects
+        """
+        if not SCAPY_AVAILABLE:
+            return []
+            
+        hops = []
+        logger.debug(f"Starting TCP SYN traceroute to {target}:{dport} (max {self.max_hops} hops)")
+        
+        for ttl in range(1, self.max_hops + 1):
+            try:
+                # Send TCP SYN packet with specific TTL
+                pkt = IP(dst=target, ttl=ttl) / TCP(dport=dport, flags="S")
+                reply = sr1(pkt, timeout=self.timeout, verbose=0)
+                
+                if reply is None:
+                    # No response - hop timeout
+                    logger.debug(f"Hop {ttl}: * (timeout)")
+                    continue
+                
+                hop_ip = reply.src
+                
+                # Try to get hostname (quick lookup, no reverse DNS delay)
+                hostname = None
+                
+                # Calculate RTT
+                rtt_ms = 0.0
+                if hasattr(reply, 'time') and hasattr(pkt, 'sent_time'):
+                    rtt_ms = (reply.time - pkt.sent_time) * 1000
+                
+                hops.append(Hop(
+                    hop_number=ttl,
+                    ip_address=hop_ip,
+                    hostname=hostname,
+                    rtt_ms=rtt_ms
+                ))
+                
+                logger.debug(f"Hop {ttl}: {hop_ip} ({rtt_ms:.2f}ms)")
+                
+                # Check if we've reached the target
+                # TCP SYN-ACK (flags=SA) or RST (flags=R) means we reached the host
+                if reply.haslayer(TCP):
+                    tcp_flags = reply[TCP].flags
+                    if tcp_flags & 0x12 or tcp_flags & 0x04:  # SYN-ACK or RST
+                        logger.debug(f"TCP traceroute complete: reached target at hop {ttl}")
+                        break
+                    
+            except Exception as e:
+                logger.debug(f"Hop {ttl}: error - {e}")
+                continue
+        
+        return hops
         
     def trace(self, target: str, filter_private_override: Optional[bool] = None) -> List[Hop]:
         """
         Perform traceroute to target host.
+        
+        Uses ICMP traceroute if available (preferred), with automatic fallback to TCP SYN
+        if ICMP fails or is blocked (e.g., Windows Docker Desktop).
         
         Args:
             target: Target IP address or hostname
@@ -84,21 +223,45 @@ class Traceroute:
                 logger.warning(f"Target {target} is not reachable (ping failed) - skipping traceroute")
                 return []
         
+        hops = []
+        
         try:
-            if self.os_type == "Windows":
-                hops = self._trace_windows(target)
-            elif self.os_type in ["Linux", "Darwin"]:
-                hops = self._trace_unix(target)
-            else:
-                raise NotImplementedError(f"Traceroute not implemented for {self.os_type}")
+            # Try scapy-based traceroute if available
+            if self.use_scapy and SCAPY_AVAILABLE:
+                # Try ICMP first (preferred method)
+                logger.debug(f"Attempting ICMP traceroute to {target}")
+                hops = self._trace_scapy_icmp(target)
+                
+                # If ICMP failed to find any hops, fall back to TCP SYN
+                if len(hops) == 0:
+                    logger.info(f"ICMP traceroute failed (likely blocked), falling back to TCP SYN")
+                    hops = self._trace_scapy_tcp(target, dport=80)
+                    
+                    if len(hops) > 0:
+                        logger.info(f"TCP SYN traceroute succeeded: {len(hops)} hops discovered")
+                    else:
+                        logger.warning(f"Both ICMP and TCP traceroute failed for {target}")
+                else:
+                    logger.debug(f"ICMP traceroute succeeded: {len(hops)} hops discovered")
+            
+            # Fall back to system commands if scapy not available or failed
+            if len(hops) == 0:
+                logger.debug(f"Using system traceroute command for {target}")
+                if self.os_type == "Windows":
+                    hops = self._trace_windows(target)
+                elif self.os_type in ["Linux", "Darwin"]:
+                    hops = self._trace_unix(target)
+                else:
+                    raise NotImplementedError(f"Traceroute not implemented for {self.os_type}")
             
             # Filter private IPs if enabled
             should_filter = filter_private_override if filter_private_override is not None else self.filter_private
             if should_filter:
                 filtered_hops = [h for h in hops if is_public_ip(h.ip_address)]
-                logger.info(f"Filtered {len(hops) - len(filtered_hops)} private hops from results")
+                logger.info(f"Traceroute complete: {len(filtered_hops)} public hops to {target} (filtered {len(hops) - len(filtered_hops)} private)")
                 return filtered_hops
             
+            logger.info(f"Traceroute complete: {len(hops)} hops to {target}")
             return hops
             
         except Exception as e:
