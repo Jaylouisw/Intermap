@@ -1,202 +1,413 @@
-<!--# Intermap - Distributed Internet Topology Mapper
+# 🌐 Intermap - Distributed Internet Topology Mapper
 
-Intermap - Distributed P2P Internet Topology Mapper
+**Map the Internet, Together.**
 
-Copyright (c) 2025 Jay WendenA distributed computing project that creates a collaborative, browsable map of internet infrastructure. Participant nodes perform **aggressive comprehensive mapping** of their network subnets, with collaborative dead IP detection and multi-perspective routing analysis.
+[![Docker Build](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml/badge.svg)](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/YOUR_USERNAME/intermap)](https://hub.docker.com/r/YOUR_USERNAME/intermap)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-Licensed under CC-BY-NC-SA 4.0
+*A distributed computing project that creates a collaborative, real-time map of global internet infrastructure through anonymous peer-to-peer participation.*
 
--->## 🌐 Project Overview
+---
 
+## 🎯 What is Intermap?
 
+Intermap is a **fully decentralized network mapping system** where participants run nodes that collaboratively discover and visualize internet infrastructure. Every participant contributes to a shared, ever-growing map showing how data flows across the internet.
 
-# Intermap**Intermap** enables consenting participants to collaboratively map internet infrastructure by:
+**Think of it as a crowdsourced, real-time "Google Maps" for internet routing paths.**
 
-- Running anonymous nodes that discover other participants via IPFS
+### 🔥 Why This Matters
 
-**Distributed P2P Internet Topology Mapper**- **Automatically mapping entire /24 subnet** of each node's public IP
+- **🔍 Transparency**: See how your data actually travels across the internet
+- **📊 Network Analysis**: Identify bottlenecks, routing inefficiencies, and network topology
+- **🌍 Global Coverage**: More participants = more comprehensive mapping
+- **🔒 Privacy-Focused**: Zero personal data collection, anonymous participation
+- **🆓 100% Free & Open Source**: No subscriptions, no paywalls, no tracking
 
-- Performing continuous traceroutes with **no rate limiting or hop limits**
+---
 
-[![Docker Build](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml/badge.svg)](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml)- **Multi-perspective mapping**: Every node maps every target for different routing perspectives
+## ✨ Key Features
 
-[![Docker Hub](https://img.shields.io/docker/pulls/YOUR_USERNAME/intermap)](https://hub.docker.com/r/YOUR_USERNAME/intermap)- **Collaborative dead IP detection**: Nodes verify and remove unreachable IPs via consensus
+### 🚀 Intelligent Network Discovery
 
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)- Each traceroute hop becomes a node, ping speed (RTT) becomes the edge weight
+- **Smart Subnet Scanning**: Automatically detects and maps your public subnet with parallel ping sweeps (50 concurrent workers)
+- **Live Host Detection**: Only maps responsive IPs - no time wasted on dead hosts
+- **Comprehensive Traceroutes**: Every hop recorded with millisecond-precision RTT measurements
+- **Well-Known Targets**: Pre-configured to map to DNS servers, root nameservers, and major CDNs
 
-- Bandwidth measurements color-code connections (green=gigabit, red=very slow)
+### ⚡ Multi-Gigabit Bandwidth Testing
 
-*Created by Jay Wenden*- **Privacy-first**: Only public IPs are shared - private IPs are NEVER included
+- **iperf3 Integration**: Built-in bandwidth testing to measure actual throughput
+- **Sequential Testing**: Accurate measurements without network congestion
+- **Peak Tracking**: Keeps maximum detected bandwidth for optimal visualization
+- **Modern Speed Support**: Color-coded up to **100 Gbps** datacenter speeds
+  - 🔵 **Cyan**: 100+ Gbps (datacenter backbone)
+  - 🔵 **Blue**: 10-40 Gbps (high-speed datacenter)
+  - 🟢 **Green**: 2.5-10 Gbps (multi-gigabit fiber)
+  - 🟡 **Yellow**: 100 Mbps - 1 Gbps (fast broadband)
+  - 🟠 **Orange**: 10-100 Mbps (medium speed)
+  - 🔴 **Red**: <10 Mbps (slow connections)
 
-- **Anonymity**: Nodes share only mapping data, not participant identities
+### 🤝 Collaborative Verification
 
-Intermap is a fully distributed computing project that creates collaborative maps of internet infrastructure. Participants run nodes that perform traceroutes, with each hop becoming a node and RTT (round-trip time) becoming the edge weight in a shared network topology graph.- Storing topology data on IPFS for distributed, censorship-resistant storage
+- **Continuous Health Checks**: Pings all mapped IPs every 5 minutes
+- **Cross-Node Verification**: Nodes confirm each other's findings for accuracy
+- **Dead IP Removal**: Consensus-based cleanup of unreachable hosts
+- **Multi-Perspective Routing**: See how different locations route to the same destination
 
-- Generating GEXF files compatible with Gephi for advanced visualization
+### 🌐 Pure Peer-to-Peer Architecture
 
----- Providing a web-based visualization using React and vis.js with bandwidth legends
+- **No Central Server**: 100% distributed coordination via IPFS
+- **Censorship-Resistant**: Data stored on IPFS content-addressed network
+- **Auto-Discovery**: Nodes find each other automatically through DHT
+- **Resilient**: Network continues operating even if nodes go offline
 
+### 🔐 Privacy by Design
 
+- **Anonymous Participation**: No signup, no accounts, no identity tracking
+- **RFC1918 Filtering**: Private IPs (10.x, 172.16-31.x, 192.168.x) NEVER shared
+- **Public IPs Only**: Only internet-routable addresses included in maps
+- **Transparent Code**: Fully open source - verify privacy yourself
 
-## 🚀 Quick Start**Key Principles**:
+### 📈 Powerful Visualization
 
-- ✅ Only public IPs (RFC1918 private ranges filtered)
+- **Real-Time Web Interface**: Interactive network graph with vis.js
+- **Bandwidth Legends**: Color-coded edges show connection speeds at a glance
+- **Gephi Export**: GEXF format for advanced offline analysis
+- **Node Inspection**: Click any hop to see latency, bandwidth, and routing details
 
-**Requires only Docker:**- ✅ Anonymous participation (no identity sharing)
+---
 
-- ✅ Aggressive comprehensive mapping (entire subnets)
+## 🚀 Quick Start (60 Seconds)
 
-```bash- ✅ Multi-perspective routing (no deduplication)
+### Option 1: Docker (Easiest - Recommended)
 
-# Host networking (recommended - most accurate)- ✅ Collaborative verification (dead IP detection)
+**Just run this command:**
 
-docker run -d \- ✅ Distributed storage (IPFS)
-
-  --network host \- ✅ Bandwidth visualization (color-coded by speed)
-
-  --cap-add NET_ADMIN \
-
-  --cap-add NET_RAW \## 🏗️ Architecture
-
+```bash
+docker run -d \
   --name intermap \
-
+  --network host \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
   YOUR_USERNAME/intermap:latest```
 
-```┌─────────────────┐
+**That's it!** Open http://localhost:8000 to see your network map.
 
-│  Participant    │
+**Why `--network host`?** It gives the container direct access to your network interface for accurate traceroutes. On Windows/Mac, use bridge mode instead:
 
-Access the web UI at **http://localhost:8000**│     Node        │◄─────┐
+```bash
+docker run -d \
+  -p 8000:8000 \
+  -p 4001:4001 \
+  -p 5201:5201 \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
+  --name intermap \
+  YOUR_USERNAME/intermap:latest
+```
 
-│  (Your PC)      │      │
+### Option 2: Docker Compose
 
----└────────┬────────┘      │
+```bash
+git clone https://github.com/YOUR_USERNAME/intermap.git
+cd intermap
+docker-compose up -d
+```
 
-         │               │
+### Option 3: From Source (Development)
 
-## ✨ Features         │ Traceroute    │ IPFS
+```bash
+git clone https://github.com/YOUR_USERNAME/intermap.git
+cd intermap
+pip install -r requirements.txt
+cd frontend && npm install && npm run build && cd ..
+python src/main.py
+```
 
-         │ + Bandwidth   │ PubSub
+**Requirements**: Python 3.9+, IPFS daemon, Node.js 16+
 
-### Fully Distributed Architecture         ▼               │
+---
 
-- **Pure P2P**: IPFS-based coordination with no central server┌─────────────────┐      │
+## 🎮 Usage
 
-- **Content Addressing**: Nodes announce via CIDs, discover through DHT│  Participant    │      │
+### Web Interface
 
-- **Collaborative**: All participants contribute to shared topology│     Node        │◄─────┤
+1. **Start your node**: `docker run ...` (see Quick Start above)
+2. **Open browser**: Navigate to http://localhost:8000
+3. **Watch the magic**: Your network map updates in real-time as traceroutes complete
 
-- **Resilient**: No single point of failure│   (Other PC)    │      │
+### What You'll See
 
-└────────┬────────┘      │
+- **Nodes**: Each circle represents a router, server, or network hop
+- **Edges**: Lines show connections between hops
+  - **Length**: Proportional to latency (shorter = faster)
+  - **Color**: Bandwidth speed (cyan/blue = gigabit+, red = slow)
+- **Your Subnet**: All live hosts automatically mapped
+- **Peer Routes**: Paths to other Intermap participants
+- **Well-Known Hosts**: Routes to Google DNS (8.8.8.8), Cloudflare (1.1.1.1), etc.
 
-### Privacy & Security         │               │
+### Command Line Interface
 
-- **Privacy First**: Only public IPs shared (RFC1918 private addresses filtered)         └───────────────┘
+```bash
+# Run specific traceroute
+docker exec intermap python -m src.cli traceroute 1.1.1.1
 
-- **Anonymous**: No identity data collected from participants                │
+# Test bandwidth to a host
+docker exec intermap python -m src.cli bandwidth 8.8.8.8
 
-- **Automatic Filtering**: 10.x, 172.16.x, 192.168.x automatically excluded                ▼
+# Export current map
+docker exec intermap python -m src.cli export --format gexf
+```
 
-- **Transparent**: Open source, verifiable privacy         ┌──────────┐
+---
 
-         │   IPFS   │
+## 📊 Understanding the Visualization
 
-### Network Mapping         │ Network  │
+### Edge Colors (Bandwidth)
 
-- **Traceroute**: Discovers network paths hop-by-hop         └────┬─────┘
+| Color | Speed Range | Typical Connection |
+|-------|-------------|-------------------|
+| 🔵 Cyan | 100+ Gbps | Datacenter backbone |
+| 🔵 Bright Blue | 40-100 Gbps | High-speed datacenter |
+| 🔵 Blue | 25-40 Gbps | Modern datacenter |
+| 🔵 Dark Blue | 10-25 Gbps | 10 GbE networks |
+| 🟢 Green | 5-10 Gbps | Multi-gig fiber |
+| 🟢 Lime | 2.5-5 Gbps | 2.5 GbE networks |
+| 🟡 Yellow-Green | 1-2.5 Gbps | Gigabit ethernet |
+| 🟡 Yellow | 100 Mbps - 1 Gbps | Fast broadband |
+| 🟠 Orange | 10-100 Mbps | Medium speed |
+| 🔴 Red-Orange | 1-10 Mbps | Slow connections |
+| 🔴 Red | <1 Mbps | Very slow |
+| ⚪ Gray | Unknown | Not tested |
 
-- **RTT Weighting**: Edge weights based on round-trip time              │
+### Edge Length
 
-- **Bandwidth Testing**: Optional iperf3 bandwidth measurements              ▼
+- **Proportional to RTT**: Shorter edges = lower latency
+- **Helps identify**: Network distance and routing efficiency
 
-- **Real-time**: Live topology updates as nodes map      ┌──────────────┐
+### Node Details
 
-      │ GEXF Files   │
+Click any node to see:
+- IP address and hostname
+- Average latency
+- Bandwidth (if tested)
+- Connected neighbors
+- Last seen timestamp
 
-### Visualization & Export      │ (Graphs with │
+---
 
-- **Interactive Graph**: Real-time network visualization with vis.js      │  Bandwidth)  │
+## 🏗️ Architecture
 
-- **Color Coding**: Bandwidth/RTT-based edge coloring      └──────┬───────┘
-
-- **GEXF Export**: Compatible with Gephi for advanced analysis              │
-
-- **Node Highlighting**: Click to inspect individual hops       ┌──────┴───────┐
-
-       │              │
-
----       ▼              ▼
-
-  ┌────────┐    ┌──────────┐
-
-## 🏗️ Architecture  │ Gephi  │    │   Web    │
-
-  │Software│    │  Viewer  │
-
-```  └────────┘    └──────────┘
-
-┌─────────────────┐       ┌──────────────┐```
-
-│   Node A        │       │     IPFS     │
-
-│  (Windows/Mac)  │◄─────►│   Network    │## 📋 Prerequisites
-
-│  - Traceroute   │       │    (DHT)     │
-
-│  - Bandwidth    │       └──────────────┘- **Python 3.9+**
-
-└─────────────────┘             ▲- **IPFS Desktop or IPFS Daemon** - [Install IPFS](https://docs.ipfs.io/install/)
-
-                                │- **Node.js 16+** - [Install Node.js](https://nodejs.org/)
-
-┌─────────────────┐             │- **Optional**: iperf3 and speedtest-cli for bandwidth testing
-
-│   Node B        │             │
-
-│    (Linux)      │◄────────────┘## 🚀 Quick Start
-
+```
+┌─────────────────┐
+│  Your Node      │
+│  - Subnet scan  │
 │  - Traceroute   │
-
-│  - Bandwidth    │### One-Command Installation
-
+│  - Bandwidth    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐       ┌─────────────────┐
+│   IPFS Network  │◄─────►│  Other Nodes    │
+│   - Discovery   │       │  - Contribute   │
+│   - Data Share  │       │  - Verify       │
+└────────┬────────┘       └─────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│  GEXF Files     │
+│  - Topology     │
+│  - Bandwidth    │
+│  - Metadata     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Visualization  │
+│  - Web UI       │
+│  - Gephi        │
 └─────────────────┘
+```
 
-```**Windows:**
+### How It Works
 
-```powershell
+1. **Node Startup**: Container launches IPFS daemon + iperf3 server + Python mapper
+2. **Subnet Detection**: Automatically identifies your public /24 subnet
+3. **Ping Sweep**: Parallel ping (50 workers) finds all live hosts in 2-3 seconds
+4. **Traceroute Phase**: Maps paths to:
+   - All live subnet hosts
+   - Well-known targets (8.8.8.8, 1.1.1.1, root servers, etc.)
+   - Other Intermap participants (discovered via IPFS)
+5. **Bandwidth Testing**: Sequential iperf3 tests to hosts with port 5201 open
+6. **Graph Building**: Hops → nodes, RTT → edge length, bandwidth → edge color
+7. **IPFS Publishing**: GEXF files published to IPFS with content-addressed CIDs
+8. **Peer Discovery**: Nodes announce presence and discover others via IPFS PubSub
+9. **Verification Loop**: Every 5 minutes, ping all mapped IPs to confirm reachability
+10. **Web Serving**: React frontend fetches and visualizes aggregated topology
 
-### How It Workspython install.py
+---
 
-.venv\Scripts\activate
+## 🤝 Contributing
 
-1. **Node Announcement**: Each node publishes its info to IPFS as a CIDpython launch.py
+**We need your help to map the internet!** Here's how you can contribute:
 
-2. **Peer Discovery**: Nodes find each other via IPFS DHT and swarm queries```
+### 🌟 Run a Node (5 minutes)
 
-3. **Network Mapping**: Nodes perform traceroutes to targets/other nodes
+The easiest way to contribute:
 
-4. **Data Sharing**: Topology data published to IPFS with pinning**Linux/Mac:**
+1. Run the Docker command from Quick Start
+2. Leave it running 24/7 (uses minimal resources)
+3. Your subnet gets mapped and shared with the network
 
-5. **Aggregation**: Frontend fetches and merges all topologies into unified graph```bash
+**More nodes = more comprehensive maps!**
 
-python3 install.py
+### 💻 Code Contributions
 
-**No central server required!** Everything runs peer-to-peer through IPFS.source .venv/bin/activate
+We welcome pull requests! Areas we need help:
 
-python3 launch.py
+- **Frontend**: React/vis.js improvements, better visualizations
+- **Performance**: Optimize traceroute parallelization
+- **Features**: IPv6 support, AS number lookups, geolocation
+- **Testing**: Unit tests, integration tests
+- **Documentation**: Tutorials, architecture diagrams
+- **Mobile**: iOS/Android app development
 
----```
+**See [CONTRIBUTING.md](CONTRIBUTING.md) for developer setup.**
 
+### 🐛 Bug Reports & Ideas
 
+- **Found a bug?** [Open an issue](https://github.com/YOUR_USERNAME/intermap/issues/new)
+- **Have an idea?** Start a [discussion](https://github.com/YOUR_USERNAME/intermap/discussions)
+- **Question?** Check [FAQ](https://github.com/YOUR_USERNAME/intermap/wiki/FAQ) or ask in discussions
 
-## 📦 InstallationThe installer will:
+---
 
-- ✅ Check Python version and system dependencies
+## 🔧 Configuration
 
-### Option 1: Docker (Recommended)- ✅ Create virtual environment
+### Environment Variables
 
-- ✅ Install all Python packages
+```bash
+# IPFS Configuration
+IPFS_REPO_PATH=/data/ipfs          # IPFS data directory
+IPFS_BOOTSTRAP_NODES=default       # Use default IPFS bootstrap nodes
+
+# Mapping Configuration  
+SUBNET_SIZE=24                      # Subnet CIDR to scan (default: /24)
+TRACEROUTE_INTERVAL=300            # Seconds between traceroute cycles
+BANDWIDTH_TEST_INTERVAL=3600       # Seconds between bandwidth tests
+PING_SWEEP_WORKERS=50              # Parallel ping workers
+
+# Web Interface
+WEB_PORT=8000                       # Web UI port
+WEB_HOST=0.0.0.0                   # Web UI bind address
+
+# Advanced
+VERIFY_REACHABLE=true              # Ping before traceroute (faster)
+USE_PEAK_BANDWIDTH=true            # Keep maximum bandwidth values
+LOG_LEVEL=INFO                     # DEBUG, INFO, WARNING, ERROR
+```
+
+### config/default.yaml
+
+```yaml
+traceroute:
+  interval: 300
+  verify_reachable: true
+  
+bandwidth:
+  enabled: true
+  interval: 3600
+  sequential_only: true
+  use_peak_results: true
+  
+well_known_targets:
+  - 8.8.8.8        # Google DNS
+  - 1.1.1.1        # Cloudflare DNS
+  - 198.41.0.4     # A.ROOT-SERVERS.NET
+  # ... more defaults
+```
+
+---
+
+## 📚 Documentation
+
+- **[Quick Start Guide](QUICKSTART.md)**: Get running in 5 minutes
+- **[Contributing Guide](CONTRIBUTING.md)**: Developer setup and guidelines
+- **[Testing Guide](TESTING.md)**: Running tests and CI
+- **[Deployment Guide](DEPLOY.md)**: Production deployment instructions
+- **[Architecture](docs/ARCHITECTURE.md)**: Technical deep dive
+- **[API Reference](docs/API.md)**: REST API documentation
+- **[FAQ](https://github.com/YOUR_USERNAME/intermap/wiki/FAQ)**: Common questions
+
+---
+
+## 🚀 Deployment
+
+### Free Tier Hosting
+
+Deploy Intermap to free cloud platforms:
+
+- **Railway**: [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=...)
+- **Render**: One-click deploy from dashboard
+- **Fly.io**: Global edge deployment
+- **Heroku**: Classic PaaS option
+
+**See [DEPLOY.md](DEPLOY.md) for detailed instructions.**
+
+### Requirements
+
+- **Minimum**: 512 MB RAM, 1 vCPU
+- **Recommended**: 1 GB RAM, 2 vCPU
+- **Network**: Port 8000 (web), 4001 (IPFS), 5201 (iperf3)
+- **Capabilities**: NET_ADMIN, NET_RAW (for traceroute/ping)
+
+---
+
+## 📜 License
+
+**Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**
+
+✅ You are free to:
+- **Share**: Copy and redistribute
+- **Adapt**: Remix, transform, build upon
+
+❌ Under these terms:
+- **Attribution**: Credit Jay Wenden
+- **NonCommercial**: No commercial use
+- **ShareAlike**: Derivatives must use same license
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **IPFS**: Decentralized storage and discovery
+- **iperf3**: Bandwidth measurement tool
+- **vis.js**: Network visualization library
+- **Gephi**: Graph analysis software
+- **All Contributors**: Thank you for mapping the internet!
+
+---
+
+## � Contact & Community
+
+- **Author**: Jay Wenden
+- **GitHub**: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/intermap/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/intermap/discussions)
+- **Wiki**: [Project Wiki](https://github.com/YOUR_USERNAME/intermap/wiki)
+
+---
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/intermap&type=Date)](https://star-history.com/#YOUR_USERNAME/intermap&Date)
+
+---
+
+**Help us map the internet!** ⭐ Star this repo and run a node today!
 
 **Host networking** for accurate topology:- ✅ Install frontend dependencies (npm)
 
