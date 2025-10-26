@@ -230,6 +230,7 @@ class TopologyNode:
             if well_known:
                 logger.info(f"Adding {len(well_known)} well-known targets")
                 self.trace_targets.update(well_known)
+                logger.info(f"trace_targets now contains: {self.trace_targets}")
             
             # Announce presence to IPFS network (fully P2P, no central server)
             await self._announce_presence()
@@ -735,6 +736,9 @@ class TopologyNode:
     async def _traceroute_loop(self):
         """Continuously perform traceroutes to all targets (peers + subnet + verifications)."""
         interval = self.config.get("node", {}).get("traceroute", {}).get("interval", 300)
+        
+        logger.info(f"Traceroute loop starting with interval {interval}s")
+        logger.info(f"Initial trace_targets: {self.trace_targets}")
         
         while self.running:
             try:

@@ -5,6 +5,10 @@ set -e
 
 echo "🗺️  Starting Intermap in Docker..."
 
+# Ensure output directory exists and has correct permissions
+mkdir -p /app/output
+chmod 777 /app/output  # Allow all users to write (needed for volume mounts)
+
 # Start iperf3 server in background
 echo "Starting iperf3 server on port 5201..."
 iperf3 -s -D
