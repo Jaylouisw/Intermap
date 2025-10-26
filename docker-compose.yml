@@ -18,6 +18,7 @@ services:
     #   - "8000:8000"  # Web UI
     #   - "5001:5001"  # IPFS API
     #   - "4001:4001"  # IPFS Swarm
+    #   - "5201:5201"  # iperf3 server
     # networks:
     #   - intermap-network
     

@@ -5,6 +5,10 @@ set -e
 
 echo "🗺️  Starting Intermap in Docker..."
 
+# Start iperf3 server in background
+echo "Starting iperf3 server on port 5201..."
+iperf3 -s -D
+
 # Start IPFS daemon in background
 echo "Starting IPFS daemon..."
 ipfs daemon --enable-pubsub-experiment &

@@ -20,9 +20,9 @@ import requests
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.ipfs.client import IPFSClient
-from src.traceroute.tracer import Traceroute
+from src.traceroute.tracer import Traceroute, detect_local_subnet, get_live_subnet_hosts
 from src.graph.gexf_generator import NetworkGraph, GEXFGenerator
-from src.bandwidth.bandwidth_tester import IPerf3Client, SpeedtestClient
+from src.bandwidth.bandwidth_tester import IPerf3Client, SpeedtestClient, BandwidthTestManager
 from src.nat_detection import detect_nat, test_connectivity
 
 logger = logging.getLogger(__name__)
@@ -31,10 +31,11 @@ logger = logging.getLogger(__name__)
 class PeerInfo:
     """Information about a discovered peer node."""
     
-    def __init__(self, node_id: str, external_ip: str, last_seen: datetime):
+    def __init__(self, node_id: str, external_ip: str, last_seen: datetime, iperf3_port: int = 5201):
         self.node_id = node_id
         self.external_ip = external_ip
         self.last_seen = last_seen
+        self.iperf3_port = iperf3_port
         self.traceroute_count = 0
         self.bandwidth_tested = False
     
@@ -93,6 +94,7 @@ class TopologyNode:
         self.ipfs_client: Optional[IPFSClient] = None
         self.tracer: Optional[Traceroute] = None
         self.network_graph = NetworkGraph()
+        self.bandwidth_manager: Optional[BandwidthTestManager] = None
         
         # Background tasks
         self.tasks: List[asyncio.Task] = []
@@ -213,8 +215,21 @@ class TopologyNode:
             self.tracer = Traceroute(
                 max_hops=tracer_config.get("max_hops", 30),
                 timeout=tracer_config.get("timeout", 5),
-                filter_private=True
+                filter_private=True,
+                verify_reachable=tracer_config.get("verify_reachable", True)
             )
+            
+            # Initialize bandwidth manager
+            bandwidth_config = self.config.get("bandwidth", {}).get("iperf3", {})
+            self.bandwidth_manager = BandwidthTestManager(
+                duration=bandwidth_config.get("duration", 10)
+            )
+            
+            # Add well-known targets
+            well_known = self.config.get("node", {}).get("well_known_targets", [])
+            if well_known:
+                logger.info(f"Adding {len(well_known)} well-known targets")
+                self.trace_targets.update(well_known)
             
             # Announce presence to IPFS network (fully P2P, no central server)
             await self._announce_presence()
@@ -266,55 +281,25 @@ class TopologyNode:
         logger.info(f"Node {self.node_id} stopped")
     
     async def _add_own_subnet_targets(self):
-        """Add all IPs in own subnet to trace targets (configurable subnet size)."""
+        """Detect subnet and add only LIVE hosts to trace targets (using ping sweep)."""
         if not self.external_ip:
             return
         
         try:
-            import ipaddress
+            logger.info("Detecting local subnet and finding live hosts...")
             
-            # Get subnet size from config (default /24)
-            subnet_size = self.config.get("node", {}).get("traceroute", {}).get("subnet_size", 24)
+            # Use new subnet detection and ping sweep
+            live_hosts = get_live_subnet_hosts(max_hosts=254)
             
-            # Validate subnet size (must be between 8 and 30)
-            if subnet_size < 8 or subnet_size > 30:
-                logger.error(f"Invalid subnet_size {subnet_size}. Must be between 8 and 30. Using default /24.")
-                subnet_size = 24
-            
-            # Calculate network
-            ip_obj = ipaddress.ip_address(self.external_ip)
-            network = ipaddress.ip_network(f"{self.external_ip}/{subnet_size}", strict=False)
-            
-            # Count total IPs (for large subnets, this could be millions)
-            total_ips = network.num_addresses - 2  # Exclude network and broadcast
-            
-            # Warn if subnet is very large
-            if subnet_size < 16:
-                logger.warning(f"⚠️ Large subnet /{subnet_size} will map {total_ips:,} IPs!")
-                logger.warning(f"This will take significant time and resources.")
-                logger.warning(f"Consider using a larger prefix (e.g., /20 or /24) for manageable scope.")
-            
-            # Add all IPs in subnet to trace targets
-            count = 0
-            max_ips = 100000  # Safety limit to prevent memory issues
-            
-            for ip in network.hosts():
-                ip_str = str(ip)
-                if ip_str != self.external_ip:  # Don't trace to self
-                    self.trace_targets.add(ip_str)
-                    count += 1
-                    
-                    # Safety check for very large subnets
-                    if count >= max_ips:
-                        logger.warning(f"⚠️ Reached safety limit of {max_ips:,} IPs. Stopping subnet enumeration.")
-                        logger.warning(f"Use a larger subnet prefix to reduce scope (e.g., /{subnet_size+4})")
-                        break
-            
-            logger.info(f"Added {count:,} IPs from own subnet {network} (/{subnet_size}) to trace targets")
-            logger.info(f"This provides comprehensive mapping from your network perspective")
-            
-            if subnet_size <= 20:
-                logger.info(f"💡 TIP: For faster mapping, consider reducing subnet size in config (e.g., /24 or /28)")
+            if live_hosts:
+                # Add live hosts to trace targets
+                for ip in live_hosts:
+                    if ip != self.external_ip:  # Don't trace to self
+                        self.trace_targets.add(ip)
+                
+                logger.info(f"✅ Added {len(live_hosts)} live hosts from local subnet to trace targets")
+            else:
+                logger.warning("No live hosts found in local subnet")
             
         except Exception as e:
             logger.error(f"Failed to add own subnet targets: {e}")
@@ -395,13 +380,15 @@ class TopologyNode:
             cid = await self.ipfs_client.announce_node(
                 self.node_id,
                 self.external_ip,
-                api_port=5000
+                api_port=5000,
+                iperf3_port=5201  # Announce iperf3 capability
             )
             
             if cid:
                 logger.info(f"✓ Node announced to IPFS network: {cid}")
                 logger.info(f"  Node ID: {self.node_id}")
                 logger.info(f"  External IP: {self.external_ip}")
+                logger.info(f"  iperf3: Port 5201")
                 logger.info("  Fully P2P - No central server required!")
             else:
                 logger.debug("IPFS not available for node announcement")
@@ -463,15 +450,17 @@ class TopologyNode:
             
             if msg_type == "presence":
                 external_ip = message.get("external_ip")
+                iperf3_port = message.get("iperf3_port", 5201)
                 
                 if node_id not in self.peer_nodes:
-                    logger.info(f"Discovered new peer: {node_id} @ {external_ip}")
+                    logger.info(f"Discovered new peer: {node_id} @ {external_ip} (iperf3:{iperf3_port})")
                 
                 # Update or add peer
                 self.peer_nodes[node_id] = PeerInfo(
                     node_id=node_id,
                     external_ip=external_ip,
-                    last_seen=datetime.now()
+                    last_seen=datetime.now(),
+                    iperf3_port=iperf3_port
                 )
                 
         except Exception as e:
@@ -757,69 +746,88 @@ class TopologyNode:
                 await asyncio.sleep(60)
     
     async def _bandwidth_test_loop(self):
-        """Periodically test bandwidth to peers and public servers."""
-        iperf3_interval = self.config.get("bandwidth", {}).get("iperf3", {}).get("interval", 7200)
-        speedtest_interval = self.config.get("bandwidth", {}).get("speedtest", {}).get("interval", 14400)
+        """
+        Comprehensive bandwidth testing after traceroutes.
+        Tests all discovered IPs sequentially with iperf3.
+        """
+        # Wait for initial traceroutes to complete
+        await asyncio.sleep(120)
         
-        last_iperf3 = datetime.now() - timedelta(seconds=iperf3_interval)
-        last_speedtest = datetime.now() - timedelta(seconds=speedtest_interval)
-        
-        iperf3_client = IPerf3Client()
-        speedtest_client = SpeedtestClient()
+        bandwidth_config = self.config.get("bandwidth", {})
+        test_interval = bandwidth_config.get("iperf3", {}).get("interval", 7200)
         
         while self.running:
             try:
-                now = datetime.now()
+                logger.info("=" * 60)
+                logger.info("STARTING BANDWIDTH TEST CYCLE")
+                logger.info("=" * 60)
                 
-                # iperf3 tests to public servers
-                if (now - last_iperf3).total_seconds() >= iperf3_interval:
-                    logger.info("Running iperf3 bandwidth tests...")
-                    
-                    for server_config in self.config.get("bandwidth", {}).get("public_servers", []):
-                        if not self.running:
-                            break
-                        
-                        try:
-                            server = server_config.get("host")
-                            port = server_config.get("port", 5201)
-                            
-                            result = iperf3_client.test_bandwidth(server, port)
-                            if result:
-                                logger.info(f"iperf3 to {server}: {result.download_mbps:.2f} Mbps down, {result.upload_mbps:.2f} Mbps up")
-                                
-                                # Update graph edges with bandwidth
-                                # Find edges to this server and update
-                                if server in self.network_graph.nodes:
-                                    for edge in self.network_graph.edges.values():
-                                        if edge.target == server:
-                                            edge.bandwidth_mbps = result.download_mbps
-                            
-                        except Exception as e:
-                            logger.error(f"iperf3 test failed to {server}: {e}")
-                    
-                    last_iperf3 = now
+                # Collect all IPs from the graph
+                all_ips = set(self.network_graph.nodes.keys())
                 
-                # Speedtest to internet
-                if (now - last_speedtest).total_seconds() >= speedtest_interval:
-                    logger.info("Running speedtest...")
-                    
-                    try:
-                        result = speedtest_client.test_bandwidth()
-                        if result:
-                            logger.info(f"Speedtest: {result.download_mbps:.2f} Mbps down, {result.upload_mbps:.2f} Mbps up, {result.latency_ms:.2f}ms latency")
-                    except Exception as e:
-                        logger.error(f"Speedtest failed: {e}")
-                    
-                    last_speedtest = now
+                # Add peer IPs
+                for peer in self.peer_nodes.values():
+                    all_ips.add(peer.external_ip)
                 
-                # Wait before checking again
-                await asyncio.sleep(60)
+                if not all_ips:
+                    logger.info("No IPs discovered yet, waiting...")
+                    await asyncio.sleep(60)
+                    continue
+                
+                logger.info(f"Found {len(all_ips)} unique IPs in topology")
+                
+                # Probe all IPs for iperf3 support
+                logger.info("Probing for iperf3 servers...")
+                testable_ips = self.bandwidth_manager.probe_targets(list(all_ips))
+                
+                if not testable_ips:
+                    logger.warning("No iperf3 servers found")
+                    await asyncio.sleep(test_interval)
+                    continue
+                
+                logger.info(f"Found {len(testable_ips)} IPs with iperf3 servers")
+                
+                # Test all targets sequentially
+                logger.info(f"Starting sequential bandwidth tests to {len(testable_ips)} targets...")
+                results = self.bandwidth_manager.test_all_targets(
+                    testable_ips,
+                    port=5201,
+                    probe_first=False  # Already probed
+                )
+                
+                logger.info(f"Completed {len(results)} bandwidth tests")
+                
+                # Update graph with bandwidth results (using peak values)
+                for result in self.bandwidth_manager.get_peak_results():
+                    # Add or update edge with bandwidth data
+                    # Since we don't have path info, just update any edge involving this IP
+                    for edge_key in list(self.network_graph.edges.keys()):
+                        if result.target in edge_key:
+                            # Update edge with peak bandwidth
+                            self.network_graph.add_edge(
+                                edge_key[0],
+                                edge_key[1],
+                                rtt_ms=self.network_graph.edges[edge_key].get("rtt_ms"),
+                                bandwidth_mbps=result.download_mbps,
+                                bandwidth_upload_mbps=result.upload_mbps
+                            )
+                            logger.debug(f"Updated edge {edge_key} with bandwidth: ↓{result.download_mbps:.2f} ↑{result.upload_mbps:.2f} Mbps")
+                
+                # Publish updated topology with bandwidth data
+                await self._publish_topology()
+                
+                logger.info("=" * 60)
+                logger.info(f"BANDWIDTH TEST CYCLE COMPLETE - Waiting {test_interval}s")
+                logger.info("=" * 60)
+                
+                # Wait before next test cycle
+                await asyncio.sleep(test_interval)
                 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Error in bandwidth test loop: {e}")
-                await asyncio.sleep(60)
+                await asyncio.sleep(300)
     
     async def _publish_topology(self):
         """Generate GEXF and publish to IPFS."""

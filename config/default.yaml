@@ -10,6 +10,26 @@ node:
     interval: 300  # seconds between traceroute rounds (5 minutes)
     auto_map_own_subnet: true  # Automatically map subnet of external IP
     subnet_size: 28  # Subnet size to map (8-30): /28=14 IPs for faster testing
+    verify_reachable: true  # Ping targets before traceroute to avoid timeouts
+  
+  # Well-known targets to always include in mapping
+  well_known_targets:
+    # Public DNS servers
+    - "8.8.8.8"        # Google DNS
+    - "8.8.4.4"        # Google DNS Secondary
+    - "1.1.1.1"        # Cloudflare DNS
+    - "1.0.0.1"        # Cloudflare DNS Secondary
+    - "9.9.9.9"        # Quad9 DNS
+    - "208.67.222.222" # OpenDNS
+    - "208.67.220.220" # OpenDNS Secondary
+    # Root DNS servers (selection)
+    - "198.41.0.4"     # a.root-servers.net
+    - "199.9.14.201"   # b.root-servers.net
+    - "192.33.4.12"    # c.root-servers.net
+    # Major CDN/Cloud endpoints
+    - "13.107.42.14"   # Microsoft Azure
+    - "104.16.132.229" # Cloudflare
+    - "151.101.1.140"  # Fastly
   
   # Mobility settings for devices that change location/IP
   mobility:
@@ -53,9 +73,11 @@ bandwidth:
   # iperf3 settings
   iperf3:
     enabled: true
-    duration: 10  # seconds
+    port: 5201  # Default iperf3 port
+    duration: 10  # seconds per test
     interval: 7200  # seconds between tests (2 hours)
     parallel_streams: 1
+    sequential_only: true  # Only run one test at a time (avoid congestion)
     
     # Public iperf3 servers to test against
     public_servers:
@@ -69,14 +91,20 @@ bandwidth:
         port: 5002
         location: "Netherlands"
   
-  # speedtest-cli settings  
+  # Bandwidth test settings
+  test_all_discovered_ips: true  # Probe all IPs for iperf3 support
+  test_intermap_nodes: true  # Always test to other Intermap nodes
+  use_peak_results: true  # Use peak bandwidth for edge coloring (not average)
+  
+  # speedtest-cli settings (fallback)
   speedtest:
     enabled: true
     interval: 14400  # seconds between tests (4 hours)
   
   # Bandwidth test rate limiting
   rate_limit:
-    max_tests_per_hour: 5
+    max_tests_per_hour: 20  # Increased for comprehensive testing
+    sequential_only: true  # One test at a time
 
 # Logging configuration
 logging:

@@ -44,6 +44,8 @@ RUN apt-get update && apt-get install -y \
     traceroute \
     iputils-ping \
     curl \
+    iperf3 \
+    iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy IPFS binary
@@ -71,7 +73,7 @@ USER intermap
 RUN ipfs init
 
 # Expose ports
-EXPOSE 5000 8000 5001
+EXPOSE 5000 8000 5001 5201
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

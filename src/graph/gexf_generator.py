@@ -44,7 +44,7 @@ class NetworkGraph:
             }
             logger.debug(f"Added node: {ip_address}")
     
-    def add_edge(self, source_ip: str, target_ip: str, rtt_ms: float = None, bandwidth_mbps: float = None, **attributes):
+    def add_edge(self, source_ip: str, target_ip: str, rtt_ms: float = None, bandwidth_mbps: float = None, bandwidth_upload_mbps: float = None, **attributes):
         """
         Add an edge between two nodes.
         
@@ -52,7 +52,8 @@ class NetworkGraph:
             source_ip: Source node IP
             target_ip: Target node IP
             rtt_ms: Round-trip time in milliseconds (latency weight)
-            bandwidth_mbps: Bandwidth in Mbps (throughput)
+            bandwidth_mbps: Download bandwidth in Mbps (throughput)
+            bandwidth_upload_mbps: Upload bandwidth in Mbps
             **attributes: Additional edge attributes
         """
         # Ensure nodes exist
@@ -65,6 +66,7 @@ class NetworkGraph:
         edge_data = {
             "rtt_ms": rtt_ms,
             "bandwidth_mbps": bandwidth_mbps,
+            "bandwidth_upload_mbps": bandwidth_upload_mbps,
             **attributes
         }
         
@@ -74,14 +76,19 @@ class NetworkGraph:
             if existing_rtt is None or (rtt_ms is not None and rtt_ms < existing_rtt):
                 self.edges[edge_key]["rtt_ms"] = rtt_ms
             
-            # Update bandwidth (keep higher value)
+            # Update download bandwidth (keep higher/peak value)
             existing_bw = self.edges[edge_key].get("bandwidth_mbps")
             if bandwidth_mbps is not None and (existing_bw is None or bandwidth_mbps > existing_bw):
                 self.edges[edge_key]["bandwidth_mbps"] = bandwidth_mbps
+            
+            # Update upload bandwidth (keep higher/peak value)
+            existing_up = self.edges[edge_key].get("bandwidth_upload_mbps")
+            if bandwidth_upload_mbps is not None and (existing_up is None or bandwidth_upload_mbps > existing_up):
+                self.edges[edge_key]["bandwidth_upload_mbps"] = bandwidth_upload_mbps
         else:
             self.edges[edge_key] = edge_data
             
-            logger.debug(f"Added edge: {source_ip} <-> {target_ip} (RTT: {rtt_ms}ms, BW: {bandwidth_mbps}Mbps)")
+            logger.debug(f"Added edge: {source_ip} <-> {target_ip} (RTT: {rtt_ms}ms, Down: {bandwidth_mbps}Mbps, Up: {bandwidth_upload_mbps}Mbps)")
     
     def remove_node(self, ip_address: str):
         """
@@ -245,11 +252,16 @@ class GEXFGenerator:
         
         attr_bandwidth = SubElement(edge_attributes, "attribute")
         attr_bandwidth.set("id", "1")
-        attr_bandwidth.set("title", "bandwidth_mbps")
+        attr_bandwidth.set("title", "bandwidth_download_mbps")
         attr_bandwidth.set("type", "float")
         
+        attr_bandwidth_up = SubElement(edge_attributes, "attribute")
+        attr_bandwidth_up.set("id", "2")
+        attr_bandwidth_up.set("title", "bandwidth_upload_mbps")
+        attr_bandwidth_up.set("type", "float")
+        
         attr_color = SubElement(edge_attributes, "attribute")
-        attr_color.set("id", "2")
+        attr_color.set("id", "3")
         attr_color.set("title", "speed_category")
         attr_color.set("type", "string")
         
@@ -278,6 +290,7 @@ class GEXFGenerator:
             # Get edge metrics
             rtt_ms = edge_data.get("rtt_ms")
             bandwidth_mbps = edge_data.get("bandwidth_mbps")
+            bandwidth_upload_mbps = edge_data.get("bandwidth_upload_mbps")
             
             # Determine speed category and color based on bandwidth
             speed_category, color = self._categorize_bandwidth(bandwidth_mbps)
@@ -305,9 +318,14 @@ class GEXFGenerator:
                 bw_attvalue.set("for", "1")
                 bw_attvalue.set("value", str(bandwidth_mbps))
             
+            if bandwidth_upload_mbps is not None:
+                bw_up_attvalue = SubElement(edge_attvalues, "attvalue")
+                bw_up_attvalue.set("for", "2")
+                bw_up_attvalue.set("value", str(bandwidth_upload_mbps))
+            
             if speed_category:
                 cat_attvalue = SubElement(edge_attvalues, "attvalue")
-                cat_attvalue.set("for", "2")
+                cat_attvalue.set("for", "3")
                 cat_attvalue.set("value", speed_category)
         
         # Write to file with pretty printing

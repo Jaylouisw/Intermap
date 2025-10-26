@@ -10,8 +10,11 @@ import logging
 import platform
 import subprocess
 import sys
+import ipaddress
+import asyncio
+import concurrent.futures
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set
 from dataclasses import dataclass
 
 # Add parent directory to path for imports
@@ -418,9 +421,203 @@ def trace_subnet(subnet: str, max_targets: int = 50) -> List[Dict]:
     return results
 
 
+def detect_local_subnet() -> Optional[str]:
+    """
+    Detect the subnet (CIDR) that the local machine's primary IP belongs to.
+    
+    Returns:
+        CIDR notation of local subnet (e.g., "192.168.1.0/24") or None if detection fails
+    """
+    try:
+        # Try to get local IP by connecting to a public DNS server
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        
+        # Use ip or ifconfig to get subnet mask
+        if platform.system() == "Windows":
+            # Windows: Use ipconfig
+            result = subprocess.run(
+                ["ipconfig"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            # Parse output to find subnet mask for local_ip
+            lines = result.stdout.split('\n')
+            found_ip = False
+            for i, line in enumerate(lines):
+                if local_ip in line:
+                    found_ip = True
+                if found_ip and "Subnet Mask" in line:
+                    # Extract subnet mask: "   Subnet Mask . . . . . . . . . . . : 255.255.255.0"
+                    mask = line.split(":")[-1].strip()
+                    # Convert to CIDR
+                    network = ipaddress.IPv4Network(f"{local_ip}/{mask}", strict=False)
+                    logger.info(f"Detected local subnet: {network}")
+                    return str(network)
+        else:
+            # Linux/Mac: Use ip addr or ifconfig
+            try:
+                # Try 'ip addr' first (modern Linux)
+                result = subprocess.run(
+                    ["ip", "addr", "show"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                # Parse output for local_ip with CIDR
+                for line in result.stdout.split('\n'):
+                    if local_ip in line and '/' in line:
+                        # Extract CIDR: "inet 192.168.1.100/24 brd ..."
+                        parts = line.split()
+                        for part in parts:
+                            if local_ip in part and '/' in part:
+                                cidr = part.split()[0] if ' ' in part else part
+                                network = ipaddress.IPv4Network(cidr, strict=False)
+                                logger.info(f"Detected local subnet: {network}")
+                                return str(network)
+            except FileNotFoundError:
+                # Fall back to ifconfig
+                result = subprocess.run(
+                    ["ifconfig"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                # Parse ifconfig output (more complex, varies by OS)
+                # For now, assume /24 if we can't detect
+                logger.warning("Could not parse subnet mask from ifconfig, assuming /24")
+                network = ipaddress.IPv4Network(f"{local_ip}/24", strict=False)
+                return str(network)
+        
+        # If all else fails, assume /24
+        logger.warning("Could not detect subnet mask, assuming /24")
+        network = ipaddress.IPv4Network(f"{local_ip}/24", strict=False)
+        return str(network)
+        
+    except Exception as e:
+        logger.error(f"Failed to detect local subnet: {e}")
+        return None
+
+
+def ping_sweep(subnet: str, timeout: int = 1, max_workers: int = 50) -> Set[str]:
+    """
+    Perform fast ping sweep to find live hosts in a subnet.
+    Uses parallel execution for speed.
+    
+    Args:
+        subnet: CIDR notation subnet to scan (e.g., "192.168.1.0/24")
+        timeout: Ping timeout in seconds
+        max_workers: Maximum parallel ping operations
+        
+    Returns:
+        Set of IP addresses that responded to ping
+    """
+    try:
+        network = ipaddress.IPv4Network(subnet, strict=False)
+        logger.info(f"Starting ping sweep of {subnet} ({network.num_addresses} addresses)")
+        
+        # Don't scan massive networks
+        if network.num_addresses > 65536:
+            logger.warning(f"Subnet {subnet} is too large ({network.num_addresses} addresses), limiting to /16")
+            # Limit to /16 at most
+            network = ipaddress.IPv4Network(f"{network.network_address}/16", strict=False)
+        
+        live_hosts = set()
+        total_hosts = network.num_addresses - 2  # Exclude network and broadcast
+        
+        def ping_host(ip: str) -> Optional[str]:
+            """Ping a single host, return IP if alive."""
+            try:
+                if platform.system() == "Windows":
+                    cmd = ["ping", "-n", "1", "-w", str(timeout * 1000), str(ip)]
+                else:
+                    cmd = ["ping", "-c", "1", "-W", str(timeout), str(ip)]
+                
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    timeout=timeout + 1
+                )
+                
+                if result.returncode == 0:
+                    return str(ip)
+                return None
+            except:
+                return None
+        
+        # Use ThreadPoolExecutor for parallel pings
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Skip network address and broadcast address
+            ips = [str(ip) for ip in network.hosts()]
+            
+            # Submit all pings
+            future_to_ip = {executor.submit(ping_host, ip): ip for ip in ips}
+            
+            # Collect results as they complete
+            for i, future in enumerate(concurrent.futures.as_completed(future_to_ip), 1):
+                result = future.result()
+                if result:
+                    live_hosts.add(result)
+                    logger.debug(f"Found live host: {result}")
+                
+                # Log progress every 50 hosts
+                if i % 50 == 0:
+                    logger.info(f"Ping sweep progress: {i}/{total_hosts} ({len(live_hosts)} live)")
+        
+        logger.info(f"Ping sweep complete: {len(live_hosts)} live hosts found in {subnet}")
+        return live_hosts
+        
+    except Exception as e:
+        logger.error(f"Ping sweep failed: {e}")
+        return set()
+
+
+def get_live_subnet_hosts(max_hosts: int = 254) -> List[str]:
+    """
+    Detect local subnet and find all live hosts within it.
+    Combines subnet detection and ping sweep.
+    
+    Args:
+        max_hosts: Maximum number of hosts to return
+        
+    Returns:
+        List of live IP addresses in local subnet (public IPs only)
+    """
+    subnet = detect_local_subnet()
+    if not subnet:
+        logger.error("Could not detect local subnet")
+        return []
+    
+    live_hosts = ping_sweep(subnet)
+    
+    # Filter to public IPs only
+    public_hosts = [ip for ip in live_hosts if is_public_ip(ip)]
+    
+    if len(public_hosts) > max_hosts:
+        logger.warning(f"Found {len(public_hosts)} live hosts, limiting to {max_hosts}")
+        public_hosts = public_hosts[:max_hosts]
+    
+    logger.info(f"Found {len(public_hosts)} live public IPs in local subnet")
+    return public_hosts
+
 
 if __name__ == "__main__":
     # Test traceroute
     logging.basicConfig(level=logging.INFO)
+    
+    # Test subnet detection
+    subnet = detect_local_subnet()
+    print(f"Detected subnet: {subnet}")
+    
+    # Test ping sweep
+    if subnet:
+        live = ping_sweep(subnet)
+        print(f"Found {len(live)} live hosts")
+    
+    # Test traceroute
     result = trace_to_target("8.8.8.8")
     print(f"Traced {result['hop_count']} hops to {result['target']}")

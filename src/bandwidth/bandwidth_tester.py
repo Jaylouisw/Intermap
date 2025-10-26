@@ -9,8 +9,10 @@ Bandwidth testing module - iperf3 and speedtest integration
 import logging
 import subprocess
 import json
-from typing import Dict, Optional, List
-from dataclasses import dataclass
+import socket
+import time
+from typing import Dict, Optional, List, Tuple
+from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,8 @@ class BandwidthResult:
     latency_ms: Optional[float] = None
     jitter_ms: Optional[float] = None
     test_type: str = "iperf3"  # iperf3 or speedtest
+    timestamp: float = field(default_factory=time.time)
+    peak: bool = False  # True if this is the peak result for this target
 
 
 class IPerf3Client:
@@ -44,18 +48,48 @@ class IPerf3Client:
         self.duration = duration
         self.parallel = parallel
     
-    def test_bandwidth(self, server: str, port: int = 5201) -> Optional[BandwidthResult]:
+    @staticmethod
+    def probe_server(host: str, port: int = 5201, timeout: int = 3) -> bool:
+        """
+        Probe if a host has an iperf3 server running.
+        
+        Args:
+            host: Target IP or hostname
+            port: iperf3 port (default: 5201)
+            timeout: Connection timeout in seconds
+            
+        Returns:
+            True if iperf3 server is reachable, False otherwise
+        """
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(timeout)
+            result = sock.connect_ex((host, port))
+            sock.close()
+            
+            if result == 0:
+                logger.debug(f"iperf3 server detected at {host}:{port}")
+                return True
+            else:
+                logger.debug(f"No iperf3 server at {host}:{port}")
+                return False
+        except Exception as e:
+            logger.debug(f"Failed to probe {host}:{port}: {e}")
+            return False
+    
+    def test_bandwidth(self, server: str, port: int = 5201, reverse: bool = False) -> Optional[BandwidthResult]:
         """
         Run iperf3 bandwidth test to a server.
         
         Args:
             server: Target server IP or hostname
             port: iperf3 server port (default: 5201)
+            reverse: If True, test download (server sends to client)
             
         Returns:
             BandwidthResult with test results, or None if test fails
         """
-        logger.info(f"Starting iperf3 test to {server}:{port}")
+        logger.info(f"Starting iperf3 test to {server}:{port} (reverse={reverse})")
         
         try:
             # Run iperf3 client with JSON output
@@ -67,6 +101,10 @@ class IPerf3Client:
                 "-P", str(self.parallel),
                 "-J"  # JSON output
             ]
+            
+            # Add reverse flag if testing download
+            if reverse:
+                cmd.append("-R")
             
             result = subprocess.run(
                 cmd,
@@ -217,6 +255,144 @@ def test_public_servers(max_servers: int = 3) -> List[BandwidthResult]:
     return results
 
 
+class BandwidthTestManager:
+    """
+    Manages sequential bandwidth testing with peak result tracking.
+    Ensures only one test runs at a time and tracks peak results per target.
+    """
+    
+    def __init__(self, duration: int = 10):
+        """
+        Initialize bandwidth test manager.
+        
+        Args:
+            duration: Duration for each iperf3 test in seconds
+        """
+        self.client = IPerf3Client(duration=duration)
+        self.peak_results: Dict[str, BandwidthResult] = {}  # target -> peak result
+        self.test_count = 0
+    
+    def probe_targets(self, targets: List[str], port: int = 5201) -> List[str]:
+        """
+        Probe multiple targets to find which have iperf3 servers.
+        
+        Args:
+            targets: List of IP addresses or hostnames
+            port: iperf3 port to probe
+            
+        Returns:
+            List of targets that have iperf3 servers running
+        """
+        logger.info(f"Probing {len(targets)} targets for iperf3 servers...")
+        available = []
+        
+        for target in targets:
+            if IPerf3Client.probe_server(target, port):
+                available.append(target)
+        
+        logger.info(f"Found {len(available)}/{len(targets)} targets with iperf3 servers")
+        return available
+    
+    def test_target(self, target: str, port: int = 5201) -> Optional[BandwidthResult]:
+        """
+        Test bandwidth to a single target (sequential, one at a time).
+        Updates peak results automatically.
+        
+        Args:
+            target: IP address or hostname
+            port: iperf3 port
+            
+        Returns:
+            BandwidthResult if successful, None otherwise
+        """
+        logger.info(f"[Test {self.test_count + 1}] Testing {target}:{port}")
+        
+        # Run test
+        result = self.client.test_bandwidth(target, port)
+        
+        if result:
+            self.test_count += 1
+            
+            # Update peak result if this is better
+            if target not in self.peak_results:
+                result.peak = True
+                self.peak_results[target] = result
+                logger.info(f"New peak for {target}: {result.download_mbps:.2f} Mbps")
+            else:
+                prev_peak = self.peak_results[target]
+                current_total = result.download_mbps + result.upload_mbps
+                peak_total = prev_peak.download_mbps + prev_peak.upload_mbps
+                
+                if current_total > peak_total:
+                    # This is a new peak
+                    prev_peak.peak = False
+                    result.peak = True
+                    self.peak_results[target] = result
+                    logger.info(f"New peak for {target}: {result.download_mbps:.2f} Mbps (previous: {prev_peak.download_mbps:.2f})")
+                else:
+                    logger.info(f"Not a peak for {target}: {result.download_mbps:.2f} Mbps (peak: {prev_peak.download_mbps:.2f})")
+        
+        return result
+    
+    def test_all_targets(self, targets: List[str], port: int = 5201, probe_first: bool = True) -> List[BandwidthResult]:
+        """
+        Test bandwidth to all targets sequentially.
+        
+        Args:
+            targets: List of IP addresses or hostnames
+            port: iperf3 port
+            probe_first: If True, probe targets before testing
+            
+        Returns:
+            List of BandwidthResult objects (successful tests only)
+        """
+        if probe_first:
+            # Filter to only targets with iperf3 servers
+            targets = self.probe_targets(targets, port)
+        
+        if not targets:
+            logger.warning("No targets available for testing")
+            return []
+        
+        logger.info(f"Testing {len(targets)} targets sequentially...")
+        results = []
+        
+        for i, target in enumerate(targets, 1):
+            logger.info(f"Progress: {i}/{len(targets)}")
+            result = self.test_target(target, port)
+            
+            if result:
+                results.append(result)
+            
+            # Brief pause between tests to avoid congestion
+            if i < len(targets):
+                time.sleep(2)
+        
+        logger.info(f"Completed {len(results)}/{len(targets)} bandwidth tests")
+        return results
+    
+    def get_peak_results(self) -> List[BandwidthResult]:
+        """
+        Get all peak results.
+        
+        Returns:
+            List of peak BandwidthResult objects
+        """
+        return list(self.peak_results.values())
+    
+    def get_peak_for_target(self, target: str) -> Optional[BandwidthResult]:
+        """
+        Get peak result for a specific target.
+        
+        Args:
+            target: IP address or hostname
+            
+        Returns:
+            BandwidthResult if target has been tested, None otherwise
+        """
+        return self.peak_results.get(target)
+
+
 if __name__ == "__main__":
     # Test bandwidth functionality
     logging.basicConfig(level=logging.INFO)
@@ -234,3 +410,7 @@ if __name__ == "__main__":
     if result:
         print(f"Download: {result.download_mbps:.2f} Mbps")
         print(f"Upload: {result.upload_mbps:.2f} Mbps")
+    
+    print("\nTesting probe functionality...")
+    has_iperf = IPerf3Client.probe_server("ping.online.net", 5201)
+    print(f"ping.online.net has iperf3: {has_iperf}")
