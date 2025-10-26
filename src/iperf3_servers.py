@@ -8,11 +8,41 @@ Dynamic iperf3 server list fetcher from GitHub repository.
 import re
 import logging
 import requests
+import socket
 from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 GITHUB_README_URL = "https://raw.githubusercontent.com/R0GGER/public-iperf3-servers/main/README.md"
+
+
+def resolve_hostname(hostname: str, timeout: int = 2) -> Optional[str]:
+    """
+    Resolve hostname to IPv4 address.
+    
+    Args:
+        hostname: Hostname or IP to resolve
+        timeout: DNS resolution timeout
+        
+    Returns:
+        IPv4 address string, or None if resolution fails
+    """
+    # If it's already an IP, return it
+    try:
+        socket.inet_aton(hostname)
+        return hostname  # Already an IP
+    except socket.error:
+        pass
+    
+    # Try to resolve hostname
+    try:
+        socket.setdefaulttimeout(timeout)
+        ip = socket.gethostbyname(hostname)
+        logger.debug(f"Resolved {hostname} -> {ip}")
+        return ip
+    except (socket.gaierror, socket.timeout) as e:
+        logger.debug(f"Failed to resolve {hostname}: {e}")
+        return None
 
 
 def parse_iperf3_command(command: str) -> Optional[Dict[str, any]]:
@@ -48,13 +78,13 @@ def parse_iperf3_command(command: str) -> Optional[Dict[str, any]]:
 
 def fetch_iperf3_servers(timeout: int = 10) -> List[Dict[str, any]]:
     """
-    Fetch all iperf3 servers from the GitHub README.
+    Fetch all iperf3 servers from the GitHub README and resolve hostnames to IPs.
     
     Args:
         timeout: HTTP request timeout in seconds
         
     Returns:
-        List of dicts with keys: host, port, location, continent
+        List of dicts with keys: host (original), ip (resolved), port, location, continent
     """
     try:
         logger.info(f"Fetching iperf3 servers from: {GITHUB_README_URL}")
@@ -82,12 +112,21 @@ def fetch_iperf3_servers(timeout: int = 10) -> List[Dict[str, any]]:
                     # Parse command
                     server_info = parse_iperf3_command(command)
                     if server_info:
-                        server_info['location'] = site
-                        server_info['continent'] = current_continent or "Unknown"
-                        server_info['country'] = country
-                        servers.append(server_info)
+                        # Resolve hostname to IP
+                        host = server_info['host']
+                        ip = resolve_hostname(host)
+                        
+                        if ip:
+                            server_info['original_host'] = host  # Keep original for logging
+                            server_info['host'] = ip  # Use IP for traceroute
+                            server_info['location'] = site
+                            server_info['continent'] = current_continent or "Unknown"
+                            server_info['country'] = country
+                            servers.append(server_info)
+                        else:
+                            logger.debug(f"Skipping {host} - DNS resolution failed")
         
-        logger.info(f"Successfully parsed {len(servers)} iperf3 servers")
+        logger.info(f"Successfully parsed and resolved {len(servers)} iperf3 servers")
         return servers
         
     except requests.RequestException as e:

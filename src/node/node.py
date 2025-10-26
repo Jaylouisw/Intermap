@@ -241,11 +241,35 @@ class TopologyNode:
                 duration=bandwidth_config.get("duration", 10)
             )
             
-            # Add well-known targets from config
+            # Add well-known targets from config (resolve hostnames to IPs)
             well_known = self.config.get("node", {}).get("well_known_targets", [])
             if well_known:
                 logger.info(f"Adding {len(well_known)} well-known targets from config")
-                self.trace_targets.update(well_known)
+                resolved_config_targets = []
+                for target in well_known:
+                    # Try to parse as IP first
+                    try:
+                        import ipaddress
+                        ipaddress.ip_address(target)
+                        # It's a valid IP, add it directly
+                        resolved_config_targets.append(target)
+                        logger.debug(f"Config target is IP: {target}")
+                    except ValueError:
+                        # Not a valid IP, must be a hostname - resolve it
+                        try:
+                            from src.iperf3_servers import resolve_hostname
+                            resolved_ip = resolve_hostname(target, timeout=2)
+                            if resolved_ip:
+                                resolved_config_targets.append(resolved_ip)
+                                logger.info(f"✓ Resolved {target} -> {resolved_ip}")
+                            else:
+                                logger.warning(f"Could not resolve config target: {target}")
+                        except Exception as e:
+                            logger.warning(f"Failed to resolve config target {target}: {e}")
+                
+                if resolved_config_targets:
+                    logger.info(f"✓ Added {len(resolved_config_targets)}/{len(well_known)} config targets")
+                    self.trace_targets.update(resolved_config_targets)
             
             # Fetch ALL iperf3 servers dynamically from GitHub
             if IPERF3_FETCHER_AVAILABLE and fetch_iperf3_servers:
