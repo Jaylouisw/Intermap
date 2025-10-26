@@ -84,4 +84,4 @@ COPY --chown=intermap:intermap docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["python", "launch.py"]
+CMD ["python", "-m", "src.main"]
