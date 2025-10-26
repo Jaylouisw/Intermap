@@ -1,120 +1,238 @@
-# ⚡ Quick Start Guide<!--
-
-Intermap - Quick Start Guide
-
-Get Intermap running in 60 seconds!Copyright (c) 2025 Jay Wenden
-
-Licensed under CC-BY-NC-SA 4.0
-
------>
+# ⚡ Quick Start Guide# ⚡ Quick Start Guide<!--
 
 
 
-## 🐳 Docker (Easiest - Recommended)# 🗺️ Intermap - Quick Start Guide
+Get Intermap running in 60 seconds!Intermap - Quick Start Guide
 
 
 
-### Prerequisites*Created by Jay Wenden*
+---Get Intermap running in 60 seconds!Copyright (c) 2025 Jay Wenden
 
 
 
-- Docker installed ([Get Docker](https://docs.docker.com/get-docker/))## Run with Docker (Easiest)
+## 🐳 Docker (Recommended)Licensed under CC-BY-NC-SA 4.0
 
-- That's it!
 
-### 1. Pull and run the image:
 
-### One Command to Rule Them All```bash
+**Prerequisites**: Docker installed ([Get Docker](https://docs.docker.com/get-docker/))----->
+
+
+
+### Run It
+
+
+
+**Linux (best accuracy):**## 🐳 Docker (Easiest - Recommended)# 🗺️ Intermap - Quick Start Guide
+
+```bash
 
 docker run -d \
 
-**Linux:**  --network host \
+  --name intermap \
 
-```bash  --cap-add NET_ADMIN \
+  --network host \### Prerequisites*Created by Jay Wenden*
 
-docker run -d \  --cap-add NET_RAW \
-
-  --name intermap \  --name intermap \
-
-  --network host \  yourusername/intermap:latest
-
-  --cap-add NET_ADMIN \```
+  --cap-add NET_ADMIN \
 
   --cap-add NET_RAW \
 
-  --restart unless-stopped \### 2. Access the interface:
+  YOUR_USERNAME/intermap:latest
 
-  YOUR_USERNAME/intermap:latest- **Web UI**: http://localhost:8000
+```- Docker installed ([Get Docker](https://docs.docker.com/get-docker/))## Run with Docker (Easiest)
 
-```- **API**: http://localhost:5000
 
-- **IPFS WebUI**: http://localhost:5001/webui
 
-**Windows/Mac (use bridge networking):**
+**Windows/Mac:**- That's it!
 
-```bash### 3. Check logs:
+```bash
 
-docker run -d \```bash
+docker run -d \### 1. Pull and run the image:
 
-  --name intermap \docker logs -f intermap
+  --name intermap \
 
-  -p 8000:8000 \```
+  -p 8000:8000 \### One Command to Rule Them All```bash
 
   -p 4001:4001 \
 
-  -p 5201:5201 \### 4. Stop:
+  -p 5201:5201 \docker run -d \
 
-  --cap-add NET_ADMIN \```bash
+  --cap-add NET_ADMIN \
 
-  --cap-add NET_RAW \docker stop intermap
+  --cap-add NET_RAW \**Linux:**  --network host \
 
-  --restart unless-stopped \docker rm intermap
+  YOUR_USERNAME/intermap:latest
 
-  YOUR_USERNAME/intermap:latest```
+``````bash  --cap-add NET_ADMIN \
+
+
+
+### Access the UIdocker run -d \  --cap-add NET_RAW \
+
+
+
+Open: **http://localhost:8000**  --name intermap \  --name intermap \
+
+
+
+You're now mapping the internet! 🌐  --network host \  yourusername/intermap:latest
+
+
+
+---  --cap-add NET_ADMIN \```
+
+
+
+## 🛑 Stop/Remove  --cap-add NET_RAW \
+
+
+
+```bash  --restart unless-stopped \### 2. Access the interface:
+
+docker stop intermap
+
+docker rm intermap  YOUR_USERNAME/intermap:latest- **Web UI**: http://localhost:8000
 
 ```
 
+```- **API**: http://localhost:5000
+
 ---
 
-### Access the UI
+- **IPFS WebUI**: http://localhost:5001/webui
 
-## What is Intermap?
+## 🎮 What You'll See
 
-Open your browser: **http://localhost:8000**
+**Windows/Mac (use bridge networking):**
 
-A **fully distributed P2P network topology mapper** where:
+### Startup (first 2-3 minutes)
+
+```bash### 3. Check logs:
+
+1. IPFS connects to network
+
+2. Subnet detection finds your /24 subnetdocker run -d \```bash
+
+3. Ping sweep discovers live hosts
+
+4. Traceroutes begin to:  --name intermap \docker logs -f intermap
+
+   - Live subnet hosts
+
+   - Well-known targets (8.8.8.8, 1.1.1.1, etc.)  -p 8000:8000 \```
+
+   - Other Intermap nodes
+
+  -p 4001:4001 \
+
+### Web Interface
+
+  -p 5201:5201 \### 4. Stop:
+
+- **Nodes**: Circles = routers/hosts
+
+- **Edges**: Lines = connections  --cap-add NET_ADMIN \```bash
+
+  - Length = latency (shorter = faster)
+
+  - Color = bandwidth (cyan = fast, red = slow)  --cap-add NET_RAW \docker stop intermap
+
+
+
+### Bandwidth Colors  --restart unless-stopped \docker rm intermap
+
+
+
+- 🔵 Cyan/Blue: 10-100+ Gbps (datacenter)  YOUR_USERNAME/intermap:latest```
+
+- 🟢 Green: 1-10 Gbps (multi-gigabit)
+
+- 🟡 Yellow: 100 Mbps - 1 Gbps (fast)```
+
+- 🟠 Orange: 10-100 Mbps (medium)
+
+- 🔴 Red: <10 Mbps (slow)---
+
+
+
+---### Access the UI
+
+
+
+## 🔧 Basic Commands## What is Intermap?
+
+
+
+### View LogsOpen your browser: **http://localhost:8000**
+
+```bash
+
+docker logs -f intermapA **fully distributed P2P network topology mapper** where:
+
+```
 
 That's it! You're now mapping the internet! 🌐- Participants run Docker containers that perform traceroutes
 
-- Each hop becomes a node, RTT becomes edge weight
+### Check IPFS
 
----- Data stored on IPFS (distributed, no central server)
+```bash- Each hop becomes a node, RTT becomes edge weight
 
-- Creates collaborative internet infrastructure map
+docker exec intermap ipfs swarm peers
 
-## 🐙 Docker Compose- Export to GEXF format for Gephi analysis
+```---- Data stored on IPFS (distributed, no central server)
 
 
 
-```bash---
+---- Creates collaborative internet infrastructure map
+
+
+
+## ❓ Troubleshooting## 🐙 Docker Compose- Export to GEXF format for Gephi analysis
+
+
+
+**Container won't start:**
+
+```bash
+
+docker logs intermap```bash---
+
+```
 
 git clone https://github.com/YOUR_USERNAME/intermap.git
 
-cd intermap## Privacy & Security
+**Can't access UI:**
+
+- Check port 8000 is freecd intermap## Privacy & Security
+
+- Try: `-p 8001:8000`
 
 docker-compose up -d
 
-```✅ **Only public IPs shared** - RFC1918 private addresses automatically filtered  
+**No peers found:**
 
-✅ **Anonymous participation** - No identity data collected  
+- Wait 2-3 minutes for IPFS to connect```✅ **Only public IPs shared** - RFC1918 private addresses automatically filtered  
 
-Open: **http://localhost:8000**✅ **Distributed storage** - IPFS content addressing  
 
-✅ **No central authority** - Pure P2P coordination via IPFS DHT
+
+---✅ **Anonymous participation** - No identity data collected  
+
+
+
+## 📚 More InfoOpen: **http://localhost:8000**✅ **Distributed storage** - IPFS content addressing  
+
+
+
+- **[README.md](README.md)**: Full feature overview✅ **No central authority** - Pure P2P coordination via IPFS DHT
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Developer setup
 
 ---
 
 ---
+
+---
+
+**Happy mapping!** 🌐
 
 ## 💻 From Source (Development)
 

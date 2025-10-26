@@ -80,34 +80,40 @@ Intermap is a **fully decentralized network mapping system** where participants 
 
 ## 🚀 Quick Start (60 Seconds)
 
-### Option 1: Docker (Easiest - Recommended)
-
-**Just run this command:**
+**Just run this one command:**
 
 ```bash
+# Linux (recommended - best accuracy)
 docker run -d \
   --name intermap \
   --network host \
   --cap-add NET_ADMIN \
   --cap-add NET_RAW \
-  YOUR_USERNAME/intermap:latest```
+  YOUR_USERNAME/intermap:latest
 
-**That's it!** Open http://localhost:8000 to see your network map.
-
-**Why `--network host`?** It gives the container direct access to your network interface for accurate traceroutes. On Windows/Mac, use bridge mode instead:
-
-```bash
+# Windows/Mac (use bridge networking)
 docker run -d \
+  --name intermap \
   -p 8000:8000 \
   -p 4001:4001 \
   -p 5201:5201 \
   --cap-add NET_ADMIN \
   --cap-add NET_RAW \
-  --name intermap \
   YOUR_USERNAME/intermap:latest
 ```
 
-### Option 2: Docker Compose
+**That's it!** Open **http://localhost:8000** in your browser.
+
+### 🛑 Stop/Remove
+
+```bash
+docker stop intermap
+docker rm intermap
+```
+
+### 🔧 Advanced: Build from Source
+
+Only for developers who want to modify code:
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/intermap.git
@@ -115,85 +121,36 @@ cd intermap
 docker-compose up -d
 ```
 
-### Option 3: From Source (Development)
-
-```bash
-git clone https://github.com/YOUR_USERNAME/intermap.git
-cd intermap
-pip install -r requirements.txt
-cd frontend && npm install && npm run build && cd ..
-python src/main.py
-```
-
-**Requirements**: Python 3.9+, IPFS daemon, Node.js 16+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development setup.
 
 ---
 
 ## 🎮 Usage
 
-### Web Interface
-
-1. **Start your node**: `docker run ...` (see Quick Start above)
-2. **Open browser**: Navigate to http://localhost:8000
-3. **Watch the magic**: Your network map updates in real-time as traceroutes complete
+Once running, open **http://localhost:8000** in your browser.
 
 ### What You'll See
 
-- **Nodes**: Each circle represents a router, server, or network hop
-- **Edges**: Lines show connections between hops
-  - **Length**: Proportional to latency (shorter = faster)
-  - **Color**: Bandwidth speed (cyan/blue = gigabit+, red = slow)
-- **Your Subnet**: All live hosts automatically mapped
+- **Nodes**: Circles representing routers/servers/hops
+- **Edges**: Connections between hops
+  - **Length**: Shorter = lower latency
+  - **Color**: Bandwidth speed (cyan = fastest, red = slowest)
+- **Your Subnet**: All live hosts automatically discovered and mapped
 - **Peer Routes**: Paths to other Intermap participants
-- **Well-Known Hosts**: Routes to Google DNS (8.8.8.8), Cloudflare (1.1.1.1), etc.
+- **Well-Known Hosts**: Routes to 8.8.8.8, 1.1.1.1, root nameservers, etc.
 
-### Command Line Interface
+### Bandwidth Color Legend
 
-```bash
-# Run specific traceroute
-docker exec intermap python -m src.cli traceroute 1.1.1.1
-
-# Test bandwidth to a host
-docker exec intermap python -m src.cli bandwidth 8.8.8.8
-
-# Export current map
-docker exec intermap python -m src.cli export --format gexf
-```
-
----
-
-## 📊 Understanding the Visualization
-
-### Edge Colors (Bandwidth)
-
-| Color | Speed Range | Typical Connection |
-|-------|-------------|-------------------|
-| 🔵 Cyan | 100+ Gbps | Datacenter backbone |
-| 🔵 Bright Blue | 40-100 Gbps | High-speed datacenter |
-| 🔵 Blue | 25-40 Gbps | Modern datacenter |
-| 🔵 Dark Blue | 10-25 Gbps | 10 GbE networks |
-| 🟢 Green | 5-10 Gbps | Multi-gig fiber |
-| 🟢 Lime | 2.5-5 Gbps | 2.5 GbE networks |
-| 🟡 Yellow-Green | 1-2.5 Gbps | Gigabit ethernet |
-| 🟡 Yellow | 100 Mbps - 1 Gbps | Fast broadband |
+| Color | Speed | Typical Use |
+|-------|-------|-------------|
+| 🔵 Cyan/Blue | 10-100+ Gbps | Datacenter backbone |
+| 🟢 Green | 1-10 Gbps | Multi-gigabit fiber |
+| 🟡 Yellow | 100 Mbps - 1 Gbps | Fast broadband/gigabit |
 | 🟠 Orange | 10-100 Mbps | Medium speed |
-| 🔴 Red-Orange | 1-10 Mbps | Slow connections |
-| 🔴 Red | <1 Mbps | Very slow |
-| ⚪ Gray | Unknown | Not tested |
+| 🔴 Red | <10 Mbps | Slow connections |
+| ⚪ Gray | Unknown | Not tested yet |
 
-### Edge Length
-
-- **Proportional to RTT**: Shorter edges = lower latency
-- **Helps identify**: Network distance and routing efficiency
-
-### Node Details
-
-Click any node to see:
-- IP address and hostname
-- Average latency
-- Bandwidth (if tested)
-- Connected neighbors
-- Last seen timestamp
+Click any node to see IP, latency, bandwidth, and connections.
 
 ---
 
@@ -250,97 +207,26 @@ Click any node to see:
 
 ## 🤝 Contributing
 
-**We need your help to map the internet!** Here's how you can contribute:
+**Help map the internet!**
 
-### 🌟 Run a Node (5 minutes)
+### 🌟 Run a Node (Easiest)
 
-The easiest way to contribute:
+Just run the Docker command from Quick Start and leave it running. More nodes = better maps!
 
-1. Run the Docker command from Quick Start
-2. Leave it running 24/7 (uses minimal resources)
-3. Your subnet gets mapped and shared with the network
+### 💻 Code, Bugs, Ideas
 
-**More nodes = more comprehensive maps!**
-
-### 💻 Code Contributions
-
-We welcome pull requests! Areas we need help:
-
-- **Frontend**: React/vis.js improvements, better visualizations
-- **Performance**: Optimize traceroute parallelization
-- **Features**: IPv6 support, AS number lookups, geolocation
-- **Testing**: Unit tests, integration tests
-- **Documentation**: Tutorials, architecture diagrams
-- **Mobile**: iOS/Android app development
-
-**See [CONTRIBUTING.md](CONTRIBUTING.md) for developer setup.**
-
-### 🐛 Bug Reports & Ideas
-
-- **Found a bug?** [Open an issue](https://github.com/YOUR_USERNAME/intermap/issues/new)
-- **Have an idea?** Start a [discussion](https://github.com/YOUR_USERNAME/intermap/discussions)
-- **Question?** Check [FAQ](https://github.com/YOUR_USERNAME/intermap/wiki/FAQ) or ask in discussions
+- **Code**: See [CONTRIBUTING.md](CONTRIBUTING.md) for developer setup
+- **Bugs**: [Open an issue](https://github.com/YOUR_USERNAME/intermap/issues)
+- **Ideas**: [Start a discussion](https://github.com/YOUR_USERNAME/intermap/discussions)
 
 ---
 
-## 🔧 Configuration
+## � Documentation
 
-### Environment Variables
-
-```bash
-# IPFS Configuration
-IPFS_REPO_PATH=/data/ipfs          # IPFS data directory
-IPFS_BOOTSTRAP_NODES=default       # Use default IPFS bootstrap nodes
-
-# Mapping Configuration  
-SUBNET_SIZE=24                      # Subnet CIDR to scan (default: /24)
-TRACEROUTE_INTERVAL=300            # Seconds between traceroute cycles
-BANDWIDTH_TEST_INTERVAL=3600       # Seconds between bandwidth tests
-PING_SWEEP_WORKERS=50              # Parallel ping workers
-
-# Web Interface
-WEB_PORT=8000                       # Web UI port
-WEB_HOST=0.0.0.0                   # Web UI bind address
-
-# Advanced
-VERIFY_REACHABLE=true              # Ping before traceroute (faster)
-USE_PEAK_BANDWIDTH=true            # Keep maximum bandwidth values
-LOG_LEVEL=INFO                     # DEBUG, INFO, WARNING, ERROR
-```
-
-### config/default.yaml
-
-```yaml
-traceroute:
-  interval: 300
-  verify_reachable: true
-  
-bandwidth:
-  enabled: true
-  interval: 3600
-  sequential_only: true
-  use_peak_results: true
-  
-well_known_targets:
-  - 8.8.8.8        # Google DNS
-  - 1.1.1.1        # Cloudflare DNS
-  - 198.41.0.4     # A.ROOT-SERVERS.NET
-  # ... more defaults
-```
-
----
-
-## 📚 Documentation
-
-- **[Quick Start Guide](QUICKSTART.md)**: Get running in 5 minutes
-- **[Contributing Guide](CONTRIBUTING.md)**: Developer setup and guidelines
-- **[Testing Guide](TESTING.md)**: Running tests and CI
-- **[Deployment Guide](DEPLOY.md)**: Production deployment instructions
-- **[Architecture](docs/ARCHITECTURE.md)**: Technical deep dive
-- **[API Reference](docs/API.md)**: REST API documentation
-- **[FAQ](https://github.com/YOUR_USERNAME/intermap/wiki/FAQ)**: Common questions
-
----
+- **[QUICKSTART.md](QUICKSTART.md)**: Simple setup instructions
+- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Developer guide
+- **[DEPLOY.md](DEPLOY.md)**: For maintainers deploying to cloud platforms
+- **[TESTING.md](TESTING.md)**: Running tests
 
 ## 🚀 Deployment
 
