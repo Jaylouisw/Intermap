@@ -44,7 +44,7 @@ class NetworkGraph:
             }
             logger.debug(f"Added node: {ip_address}")
     
-    def add_edge(self, source_ip: str, target_ip: str, rtt_ms: float = None, bandwidth_mbps: float = None, bandwidth_upload_mbps: float = None, **attributes):
+    def add_edge(self, source_ip: str, target_ip: str, rtt_ms: float = None, bandwidth_down_mbps: float = None, bandwidth_up_mbps: float = None, **attributes):
         """
         Add an edge between two nodes.
         
@@ -52,8 +52,8 @@ class NetworkGraph:
             source_ip: Source node IP
             target_ip: Target node IP
             rtt_ms: Round-trip time in milliseconds (latency weight)
-            bandwidth_mbps: Download bandwidth in Mbps (throughput)
-            bandwidth_upload_mbps: Upload bandwidth in Mbps
+            bandwidth_down_mbps: Download bandwidth in Mbps (throughput)
+            bandwidth_up_mbps: Upload bandwidth in Mbps
             **attributes: Additional edge attributes
         """
         # Ensure nodes exist
@@ -65,8 +65,8 @@ class NetworkGraph:
         
         edge_data = {
             "rtt_ms": rtt_ms,
-            "bandwidth_mbps": bandwidth_mbps,
-            "bandwidth_upload_mbps": bandwidth_upload_mbps,
+            "bandwidth_down_mbps": bandwidth_down_mbps,
+            "bandwidth_up_mbps": bandwidth_up_mbps,
             **attributes
         }
         
@@ -77,18 +77,18 @@ class NetworkGraph:
                 self.edges[edge_key]["rtt_ms"] = rtt_ms
             
             # Update download bandwidth (keep higher/peak value)
-            existing_bw = self.edges[edge_key].get("bandwidth_mbps")
-            if bandwidth_mbps is not None and (existing_bw is None or bandwidth_mbps > existing_bw):
-                self.edges[edge_key]["bandwidth_mbps"] = bandwidth_mbps
+            existing_bw = self.edges[edge_key].get("bandwidth_down_mbps")
+            if bandwidth_down_mbps is not None and (existing_bw is None or bandwidth_down_mbps > existing_bw):
+                self.edges[edge_key]["bandwidth_down_mbps"] = bandwidth_down_mbps
             
             # Update upload bandwidth (keep higher/peak value)
-            existing_up = self.edges[edge_key].get("bandwidth_upload_mbps")
-            if bandwidth_upload_mbps is not None and (existing_up is None or bandwidth_upload_mbps > existing_up):
-                self.edges[edge_key]["bandwidth_upload_mbps"] = bandwidth_upload_mbps
+            existing_up = self.edges[edge_key].get("bandwidth_up_mbps")
+            if bandwidth_up_mbps is not None and (existing_up is None or bandwidth_up_mbps > existing_up):
+                self.edges[edge_key]["bandwidth_up_mbps"] = bandwidth_up_mbps
         else:
             self.edges[edge_key] = edge_data
             
-            logger.debug(f"Added edge: {source_ip} <-> {target_ip} (RTT: {rtt_ms}ms, Down: {bandwidth_mbps}Mbps, Up: {bandwidth_upload_mbps}Mbps)")
+            logger.debug(f"Added edge: {source_ip} <-> {target_ip} (RTT: {rtt_ms}ms, Down: {bandwidth_down_mbps}Mbps, Up: {bandwidth_up_mbps}Mbps)")
     
     def remove_node(self, ip_address: str):
         """
@@ -307,11 +307,11 @@ class GEXFGenerator:
             
             # Get edge metrics
             rtt_ms = edge_data.get("rtt_ms")
-            bandwidth_mbps = edge_data.get("bandwidth_mbps")
-            bandwidth_upload_mbps = edge_data.get("bandwidth_upload_mbps")
+            bandwidth_down_mbps = edge_data.get("bandwidth_down_mbps")
+            bandwidth_up_mbps = edge_data.get("bandwidth_up_mbps")
             
-            # Determine speed category and color based on bandwidth
-            speed_category, color = self._categorize_bandwidth(bandwidth_mbps)
+            # Determine speed category and color based on download bandwidth
+            speed_category, color = self._categorize_bandwidth(bandwidth_down_mbps)
             
             # Set edge LENGTH based on RTT (lower RTT = shorter edge for better visualization)
             # Use RTT as length directly - visualization tools will interpret this
@@ -319,8 +319,8 @@ class GEXFGenerator:
                 edge.set("length", str(rtt_ms))
             
             # Set weight (use bandwidth if available, otherwise inverse RTT)
-            if bandwidth_mbps is not None:
-                edge.set("weight", str(bandwidth_mbps))
+            if bandwidth_down_mbps is not None:
+                edge.set("weight", str(bandwidth_down_mbps))
             elif rtt_ms is not None:
                 edge.set("weight", str(1000 / rtt_ms))  # Inverse RTT as weight
             
@@ -336,15 +336,15 @@ class GEXFGenerator:
                 rtt_attvalue.set("for", "0")
                 rtt_attvalue.set("value", str(rtt_ms))
             
-            if bandwidth_mbps is not None:
+            if bandwidth_down_mbps is not None:
                 bw_attvalue = SubElement(edge_attvalues, "attvalue")
                 bw_attvalue.set("for", "1")
-                bw_attvalue.set("value", str(bandwidth_mbps))
+                bw_attvalue.set("value", str(bandwidth_down_mbps))
             
-            if bandwidth_upload_mbps is not None:
+            if bandwidth_up_mbps is not None:
                 bw_up_attvalue = SubElement(edge_attvalues, "attvalue")
                 bw_up_attvalue.set("for", "2")
-                bw_up_attvalue.set("value", str(bandwidth_upload_mbps))
+                bw_up_attvalue.set("value", str(bandwidth_up_mbps))
             
             if speed_category:
                 cat_attvalue = SubElement(edge_attvalues, "attvalue")

@@ -30,6 +30,17 @@ node:
     - "13.107.42.14"   # Microsoft Azure
     - "104.16.132.229" # Cloudflare
     - "151.101.1.140"  # Fastly
+    # Public iperf3 servers (geographically diverse)
+    - "ping.online.net"           # France (Paris) - 100Gbps
+    - "iperf.he.net"              # USA (Hurricane Electric)
+    - "speedtest.wtnet.de"        # Germany (40Gbps)
+    - "speedtest.serverius.net"   # Netherlands
+    - "speedtest.lon12.uk.leaseweb.net"  # UK (London) - 10Gbps
+    - "speedtest.syd12.au.leaseweb.net"  # Australia (Sydney) - 10Gbps
+    - "speedtest.tyo11.jp.leaseweb.net"  # Japan (Tokyo) - 10Gbps
+    - "speedtest.dal13.us.leaseweb.net"  # USA (Dallas) - 10Gbps
+    - "speedtest.fra1.de.leaseweb.net"   # Germany (Frankfurt) - 10Gbps
+    - "speedtest.ams1.nl.leaseweb.net"   # Netherlands (Amsterdam) - 10Gbps
   
   # Mobility settings for devices that change location/IP
   mobility:
@@ -70,41 +81,61 @@ bandwidth:
   # Enable automatic bandwidth testing
   enabled: true
   
+  # Test ALL discovered IPs (every hop from traceroutes)
+  test_discovered_hops: true
+  test_intermap_nodes: true  # Always test to other Intermap nodes
+  
   # iperf3 settings
   iperf3:
     enabled: true
-    port: 5201  # Default iperf3 port
-    duration: 10  # seconds per test
-    interval: 7200  # seconds between tests (2 hours)
-    parallel_streams: 1
-    sequential_only: true  # Only run one test at a time (avoid congestion)
+    duration: 5  # seconds per test (reduced for faster comprehensive testing)
+    parallel_streams: 1  # Single stream for more accurate RTT correlation
+    reverse_mode: false  # Download test (false = upload)
     
-    # Public iperf3 servers to test against
+    # Well-known public iperf3 servers with open ports
     public_servers:
+      # Europe
       - host: "ping.online.net"
         port: 5201
         location: "France"
-      - host: "iperf.he.net"
+      - host: "speedtest.wtnet.de"
         port: 5201
-        location: "USA"
-      - host: "speedtest.serverius.net"
-        port: 5002
+        location: "Germany"
+      - host: "speedtest.lon12.uk.leaseweb.net"
+        port: 5201
+        location: "UK"
+      - host: "speedtest.ams1.nl.leaseweb.net"
+        port: 5201
         location: "Netherlands"
-  
-  # Bandwidth test settings
-  test_all_discovered_ips: true  # Probe all IPs for iperf3 support
-  test_intermap_nodes: true  # Always test to other Intermap nodes
-  use_peak_results: true  # Use peak bandwidth for edge coloring (not average)
-  
-  # speedtest-cli settings (fallback)
-  speedtest:
-    enabled: true
-    interval: 14400  # seconds between tests (4 hours)
+      # Americas
+      - host: "speedtest.dal13.us.leaseweb.net"
+        port: 5201
+        location: "USA-Dallas"
+      - host: "speedtest.nyc1.us.leaseweb.net"
+        port: 5201
+        location: "USA-NewYork"
+      # Asia-Pacific
+      - host: "speedtest.tyo11.jp.leaseweb.net"
+        port: 5201
+        location: "Japan"
+      - host: "speedtest.syd12.au.leaseweb.net"
+        port: 5201
+        location: "Australia"
+    
+    # Auto-discovery settings
+    auto_discover_servers: true  # Try port 5201 on all discovered IPs
+    discovery_timeout: 2  # seconds to wait for iperf3 server response
+    max_concurrent_tests: 3  # Limit concurrent bandwidth tests
+    test_interval: 300  # seconds between bandwidth test rounds (5 minutes)
   
   # Bandwidth test rate limiting
   rate_limit:
-    max_tests_per_hour: 20  # Increased for comprehensive testing
-    sequential_only: true  # One test at a time
+    max_tests_per_hour: 100  # Allow many tests for comprehensive mapping
+    sequential_only: false  # Allow concurrent tests (up to max_concurrent_tests)
+  
+  # Store results in graph edges
+  store_in_graph: true
+  use_peak_results: true  # Use peak bandwidth, not average
 
 # Logging configuration
 logging:

@@ -822,10 +822,12 @@ class TopologyNode:
                                     )
                             
                             # Add ONLY public IPs to network graph (for IPFS sharing)
+                            public_hops_discovered = []
                             for i, hop in enumerate(hops):
                                 # Skip private IPs for shared graph
                                 if not is_private_ip(hop.ip_address):
                                     self.network_graph.add_node(hop.ip_address, hop.hostname)
+                                    public_hops_discovered.append(hop.ip_address)
                                     
                                     # Connect to previous public hop
                                     if i > 0:
@@ -840,6 +842,16 @@ class TopologyNode:
                                                     rtt_ms=rtt_diff
                                                 )
                                                 break
+                            
+                            # Add discovered public IPs to trace_targets for future rounds
+                            new_targets = []
+                            for hop_ip in public_hops_discovered:
+                                if hop_ip not in self.trace_targets and hop_ip != target_ip:
+                                    self.trace_targets.add(hop_ip)
+                                    new_targets.append(hop_ip)
+                            
+                            if new_targets:
+                                logger.info(f"Added {len(new_targets)} new discovered IPs to trace queue")
                             
                             # Mark as reachable
                             if target_ip in self.ip_reachability:
@@ -962,13 +974,18 @@ class TopologyNode:
                 # Update graph with bandwidth results
                 # Apply bandwidth to ALL edges in the traceroute path (tunnel bandwidth)
                 for result, hops in results:
-                    logger.info(f"Applying bandwidth to path for {result.target}: {len(hops)} hops")
+                    if not hops:
+                        logger.warning(f"No hops for {result.target}, skipping bandwidth application")
+                        continue
+                        
+                    logger.info(f"Applying bandwidth to path for {result.target}: {len(hops)} hops, {result.download_mbps:.2f} Mbps down / {result.upload_mbps:.2f} Mbps up")
                     
                     # Add ALL hops to local graph
                     for hop in hops:
                         self.local_graph.add_node(hop.ip_address, hop.hostname)
                     
                     # Apply bandwidth to ALL edges in the local graph path
+                    # This represents the bottleneck bandwidth of the entire path
                     for i in range(len(hops) - 1):
                         hop1 = hops[i]
                         hop2 = hops[i + 1]
@@ -976,12 +993,13 @@ class TopologyNode:
                         # Calculate RTT difference for this edge
                         rtt_diff = abs(hop2.rtt_ms - hop1.rtt_ms) if hop2.rtt_ms and hop1.rtt_ms else None
                         
-                        # Add edge to local graph with bandwidth
+                        # Add edge to local graph with bandwidth (bottleneck for entire path)
                         self.local_graph.add_edge(
                             hop1.ip_address,
                             hop2.ip_address,
                             rtt_ms=rtt_diff,
-                            bandwidth_mbps=result.bandwidth_mbps
+                            bandwidth_down_mbps=result.download_mbps,
+                            bandwidth_up_mbps=result.upload_mbps
                         )
                         
                         # Add to network graph only if both hops are public
@@ -992,10 +1010,11 @@ class TopologyNode:
                                 hop1.ip_address,
                                 hop2.ip_address,
                                 rtt_ms=rtt_diff,
-                            bandwidth_mbps=result.download_mbps,
-                            bandwidth_upload_mbps=result.upload_mbps
-                        )
-                        logger.debug(f"Applied tunnel bandwidth to edge {hop1.ip_address} <-> {hop2.ip_address}: {result.download_mbps:.2f} Mbps")
+                                bandwidth_down_mbps=result.download_mbps,
+                                bandwidth_up_mbps=result.upload_mbps
+                            )
+                        
+                        logger.debug(f"Applied bandwidth to edge {hop1.ip_address} <-> {hop2.ip_address}: ↓{result.download_mbps:.2f} Mbps ↑{result.upload_mbps:.2f} Mbps")
                 
                 # Publish updated topology with bandwidth data
                 await self._publish_topology()
