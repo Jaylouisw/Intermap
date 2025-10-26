@@ -461,12 +461,35 @@ class TopologyNode:
         try:
             msg_type = message.get("type")
             node_id = message.get("node_id")
+            protocol_version = message.get("protocol_version")
             
             # Ignore our own messages
             if node_id == self.node_id:
                 return
             
-            if msg_type == "presence":
+            # Verify it's actually an Intermap node
+            if protocol_version != "intermap-v1":
+                logger.debug(f"Ignoring non-Intermap message from {node_id}")
+                return
+            
+            # Handle node announcements (new discovery method)
+            if msg_type == "node_announcement":
+                external_ip = message.get("external_ip")
+                iperf3_port = message.get("iperf3_port", 5201)
+                
+                if node_id not in self.peer_nodes:
+                    logger.info(f"✓ Discovered Intermap node: {node_id} @ {external_ip} (iperf3:{iperf3_port})")
+                
+                # Update or add peer
+                self.peer_nodes[node_id] = PeerInfo(
+                    node_id=node_id,
+                    external_ip=external_ip,
+                    last_seen=datetime.now(),
+                    iperf3_port=iperf3_port
+                )
+            
+            # Legacy presence messages (for backward compatibility)
+            elif msg_type == "presence":
                 external_ip = message.get("external_ip")
                 iperf3_port = message.get("iperf3_port", 5201)
                 

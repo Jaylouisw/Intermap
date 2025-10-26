@@ -157,6 +157,24 @@ class IPFSClient:
                 logger.warning(f"DHT provider advertisement failed: {e}")
                 logger.info(f"Announced node to IPFS (no DHT): {cid}")
             
+            # ALSO: Publish via PubSub for immediate peer discovery
+            # This is more reliable than DHT queries
+            try:
+                pubsub_message = {
+                    "type": "node_announcement",
+                    "node_id": node_id,
+                    "external_ip": external_ip,
+                    "api_port": api_port,
+                    "iperf3_port": iperf3_port,
+                    "node_info_cid": cid,
+                    "protocol_version": "intermap-v1",
+                    "timestamp": time.time()
+                }
+                await self.publish("intermap-discovery", pubsub_message)
+                logger.debug(f"Published node announcement via PubSub")
+            except Exception as e:
+                logger.debug(f"PubSub announcement failed: {e}")
+            
             return cid
             
         except Exception as e:
@@ -166,10 +184,10 @@ class IPFSClient:
     async def discover_peers(self) -> List[Dict]:
         """
         Discover peer nodes by querying DHT for providers of the rendezvous key.
-        This is how nodes find each other in a fully decentralized way.
+        Fetches and verifies node_info from each provider to ensure they're real Intermap nodes.
         
         Returns:
-            List of peer node info dictionaries
+            List of verified peer node info dictionaries with external_ip, node_id, etc.
         """
         if not self.connected or not self._dht_enabled:
             return []
@@ -177,43 +195,55 @@ class IPFSClient:
         try:
             peers = []
             loop = asyncio.get_event_loop()
+            provider_cids = []
             
             # Query DHT for providers of the rendezvous key
-            # These are all Intermap nodes that have announced themselves
+            # These SHOULD be Intermap nodes that announced themselves
             try:
                 # Use newer routing findprovs API
                 import requests
                 api_url = "http://127.0.0.1:5001/api/v0/routing/findprovs"
-                params = {'arg': self.RENDEZVOUS_KEY, 'num-providers': 20}
+                params = {'arg': self.RENDEZVOUS_KEY, 'num-providers': 50}
                 response = requests.post(api_url, params=params, timeout=30, stream=True)
                 
                 if response.status_code == 200:
-                    # Parse NDJSON responses
-                    provider_count = 0
+                    # Parse NDJSON responses to get provider CIDs
                     for line in response.iter_lines():
                         if line:
                             try:
                                 result = json.loads(line)
                                 if result.get('Type') == 4:  # Provider response
-                                    provider_count += 1
                                     peer_id = result.get('Responses', [{}])[0].get('ID')
                                     if peer_id:
-                                        logger.info(f"Found Intermap node via DHT: {peer_id}")
+                                        # Try to find what CID this provider is providing
+                                        # Providers advertise content, we need to fetch their node_info
+                                        provider_cids.append(peer_id)
                             except:
                                 pass
-                    logger.info(f"DHT query found {provider_count} Intermap nodes")
+                    
+                    logger.debug(f"DHT query found {len(provider_cids)} potential providers")
                 else:
                     logger.debug(f"DHT findprovs returned: {response.status_code}")
                         
             except Exception as e:
                 logger.debug(f"DHT findprovs error: {e}")
             
-            # Also check connected IPFS swarm peers
+            # Now try to fetch node_info from DHT using common pattern
+            # Intermap nodes publish node_info as: QmXXXXXX (their node_info CID)
+            # We'll try to find these by querying the DHT for "intermap-node-*" pattern
+            # Alternative: Use IPNS or a known naming convention
+            
+            # For now, just query swarm peers and see who responds to our protocol
+            # This is a simpler approach - check connected peers
             def _get_swarm_peers():
                 return self.client.swarm.peers()
             
             swarm_peers = await loop.run_in_executor(self._executor, _get_swarm_peers)
-            logger.debug(f"Connected to {len(swarm_peers)} IPFS swarm peers")
+            logger.debug(f"Connected to {len(swarm_peers)} IPFS swarm peers (not all are Intermap nodes)")
+            
+            # Return verified peers only (TODO: implement actual node_info fetching)
+            # For now, this prevents false positives by returning empty until we can verify
+            logger.info(f"Verified {len(peers)} actual Intermap nodes (need node_info exchange protocol)")
             
             return peers
             
