@@ -25,11 +25,17 @@ WEB_PID=$!
 
 cd /app
 
+# Start API server in background
+echo "Starting API server on port 5000..."
+python3 -m src.api_server &
+API_PID=$!
+
 # Trap exit signals to cleanup
 cleanup() {
     echo "Stopping services..."
     kill $IPFS_PID 2>/dev/null || true
     kill $WEB_PID 2>/dev/null || true
+    kill $API_PID 2>/dev/null || true
     kill $MAIN_PID 2>/dev/null || true
     exit 0
 }

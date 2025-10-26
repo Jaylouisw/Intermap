@@ -296,7 +296,11 @@ def run_server(host='0.0.0.0', port=5000):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    logger.info("Main entry point reached")
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    logger.info("Starting API server as standalone module")
+    run_server()
     run_server()
     logger.info("run_server() returned")
