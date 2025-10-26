@@ -3,6 +3,7 @@
 # Core dependencies
 asyncio-mqtt>=0.16.1
 pyyaml>=6.0
+requests>=2.31.0
 
 # IPFS integration
 ipfshttpclient>=0.8.0a2

@@ -28,6 +28,16 @@ from src.utils import is_private_ip
 
 logger = logging.getLogger(__name__)
 
+# Import iperf3 server fetcher (after logger defined)
+try:
+    from src.utils.iperf3_servers import fetch_iperf3_servers
+    IPERF3_FETCHER_AVAILABLE = True
+except ImportError:
+    IPERF3_FETCHER_AVAILABLE = False
+    fetch_iperf3_servers = None
+
+logger = logging.getLogger(__name__)
+
 
 class PeerInfo:
     """Information about a discovered peer node."""
@@ -230,12 +240,39 @@ class TopologyNode:
                 duration=bandwidth_config.get("duration", 10)
             )
             
-            # Add well-known targets
+            # Add well-known targets from config
             well_known = self.config.get("node", {}).get("well_known_targets", [])
             if well_known:
-                logger.info(f"Adding {len(well_known)} well-known targets")
+                logger.info(f"Adding {len(well_known)} well-known targets from config")
                 self.trace_targets.update(well_known)
-                logger.info(f"trace_targets now contains: {self.trace_targets}")
+            
+            # Fetch ALL iperf3 servers dynamically from GitHub
+            if IPERF3_FETCHER_AVAILABLE and fetch_iperf3_servers:
+                try:
+                    logger.info("Fetching ALL iperf3 servers from GitHub repository...")
+                    iperf3_servers = fetch_iperf3_servers(timeout=10)
+                    
+                    if iperf3_servers:
+                        # Extract unique hosts
+                        iperf3_hosts = list(set([s['host'] for s in iperf3_servers]))
+                        logger.info(f"✓ Fetched {len(iperf3_hosts)} unique iperf3 server hosts from GitHub")
+                        self.trace_targets.update(iperf3_hosts)
+                        
+                        # Log sample
+                        if iperf3_hosts:
+                            logger.info(f"Sample servers: {', '.join(iperf3_hosts[:5])}")
+                    else:
+                        logger.warning("No iperf3 servers fetched - using config only")
+                        
+                except Exception as e:
+                    logger.error(f"Failed to fetch iperf3 servers from GitHub: {e}")
+                    logger.info("Continuing with config targets only")
+            else:
+                logger.warning("iperf3 fetcher not available - using config targets only")
+            
+            logger.info(f"Total trace targets loaded: {len(self.trace_targets)}")
+            if self.trace_targets:
+                logger.info(f"First 10 targets: {list(self.trace_targets)[:10]}")
             
             # Announce presence to IPFS network (fully P2P, no central server)
             await self._announce_presence()
