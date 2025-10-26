@@ -22,12 +22,17 @@ from src.ipfs.client import IPFSClient
 def setup_logging(verbose: bool = False):
     """Configure logging for the application."""
     level = logging.DEBUG if verbose else logging.INFO
+    
+    # Use /tmp for log file in Docker, current directory otherwise
+    import os
+    log_path = '/tmp/topology_node.log' if os.path.exists('/tmp') else 'topology_node.log'
+    
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler('topology_node.log')
+            logging.FileHandler(log_path)
         ]
     )
 
