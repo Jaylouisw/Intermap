@@ -252,7 +252,78 @@ For development and testing information, see [DEPLOY.md](DEPLOY.md).
 
 ---
 
-## 📜 License
+## � Troubleshooting
+
+### Blank White Screen / Web UI Not Loading
+
+**Problem**: Opening `http://localhost:5000` shows a blank page or 404 errors for static files.
+
+**Cause**: Container started without port mappings.
+
+**Solution**: Make sure you include `-p` flags when running Docker:
+
+```bash
+# ✅ CORRECT - With port mappings
+docker run -d --name intermap \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  -p 5000:5000 -p 4001:4001 -p 5201:5201 \
+  -v intermap-ipfs:/home/intermap/.ipfs \
+  -v intermap-output:/app/output \
+  jaylouisw/intermap:latest
+
+# ❌ WRONG - Missing -p flags (ports not accessible)
+docker run -d --name intermap \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  jaylouisw/intermap:latest
+```
+
+**Quick Fix**: Use the provided scripts:
+- **Windows**: `.\run_docker.ps1`
+- **Linux/Mac**: `./run_docker.sh`
+
+### Container Exits Immediately
+
+Check logs: `docker logs intermap`
+
+Common causes:
+- **Missing capabilities**: Ensure `--cap-add=NET_ADMIN` and `--cap-add=NET_RAW` are included
+- **Port conflict**: Port 5000 already in use by another service
+- **Invalid subnet**: Check `TARGET_SUBNET` environment variable format
+
+### No Topology Data Showing
+
+Wait 5-10 minutes for initial traceroutes to complete. Check:
+```bash
+# View real-time logs
+docker logs -f intermap
+
+# Check if node info file exists
+docker exec intermap ls -la /app/output/
+```
+
+If still no data after 15 minutes, restart the container.
+
+### IPFS Won't Connect to Peers
+
+- **Wait**: IPFS peer discovery takes 2-5 minutes on first launch
+- **Firewall**: Ensure port 4001 is open in your firewall/router
+- **Check logs**: `docker logs intermap | grep -i ipfs`
+- **ISP blocking**: Some ISPs block P2P protocols - try a VPN
+
+### High CPU Usage
+
+Normal during subnet scanning and traceroute operations. CPU usage drops after initial discovery phase (15-30 minutes).
+
+### Docker Desktop (Windows/Mac) Limitations
+
+Docker Desktop uses a VM that doesn't fully support raw sockets. For full functionality:
+- Use **Linux** with Docker Engine
+- Deploy to a **Linux VPS/cloud server**
+- Use **Unraid** (native Docker, full hardware access)
+
+---
+
+## �📜 License
 
 **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**
 
