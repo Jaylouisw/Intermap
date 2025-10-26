@@ -61,5 +61,5 @@ jobs:
           platforms: linux/amd64
 
       - name: Image digest
-        run: echo ${{ steps.meta.outputs.tags }}
+        run: echo "${{ steps.meta.outputs.tags }}"
 
