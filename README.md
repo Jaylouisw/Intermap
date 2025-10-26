@@ -2,8 +2,8 @@
 
 **Map the Internet, Together.**
 
-[![Docker Build](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml/badge.svg)](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml)
-[![Docker Hub](https://img.shields.io/docker/pulls/YOUR_USERNAME/intermap)](https://hub.docker.com/r/YOUR_USERNAME/intermap)
+[![Docker Build](https://github.com/jaylouisw/intermap/actions/workflows/docker-build.yml/badge.svg)](https://github.com/jaylouisw/intermap/actions/workflows/docker-build.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/jaylouisw/intermap)](https://hub.docker.com/r/jaylouisw/intermap)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 *A distributed computing project that creates a collaborative, real-time map of global internet infrastructure through anonymous peer-to-peer participation.*
@@ -89,7 +89,7 @@ docker run -d \
   --network host \
   --cap-add NET_ADMIN \
   --cap-add NET_RAW \
-  YOUR_USERNAME/intermap:latest
+  jaylouisw/intermap:latest
 
 # Windows/Mac (use bridge networking)
 docker run -d \
@@ -99,7 +99,7 @@ docker run -d \
   -p 5201:5201 \
   --cap-add NET_ADMIN \
   --cap-add NET_RAW \
-  YOUR_USERNAME/intermap:latest
+  jaylouisw/intermap:latest
 ```
 
 **That's it!** Open **http://localhost:8000** in your browser.
@@ -116,7 +116,7 @@ docker rm intermap
 Only for developers who want to modify code:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/intermap.git
+git clone https://github.com/jaylouisw/intermap.git
 cd intermap
 docker-compose up -d
 ```
@@ -216,8 +216,8 @@ Just run the Docker command from Quick Start and leave it running. More nodes = 
 ### 💻 Code, Bugs, Ideas
 
 - **Code**: See [CONTRIBUTING.md](CONTRIBUTING.md) for developer setup
-- **Bugs**: [Open an issue](https://github.com/YOUR_USERNAME/intermap/issues)
-- **Ideas**: [Start a discussion](https://github.com/YOUR_USERNAME/intermap/discussions)
+- **Bugs**: [Open an issue](https://github.com/jaylouisw/intermap/issues)
+- **Ideas**: [Start a discussion](https://github.com/jaylouisw/intermap/discussions)
 
 ---
 
@@ -280,16 +280,16 @@ See [LICENSE](LICENSE) for details.
 ## � Contact & Community
 
 - **Author**: Jay Wenden
-- **GitHub**: [@YOUR_USERNAME](https://github.com/YOUR_USERNAME)
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/intermap/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/intermap/discussions)
-- **Wiki**: [Project Wiki](https://github.com/YOUR_USERNAME/intermap/wiki)
+- **GitHub**: [@jaylouisw](https://github.com/jaylouisw)
+- **Issues**: [GitHub Issues](https://github.com/jaylouisw/intermap/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jaylouisw/intermap/discussions)
+- **Wiki**: [Project Wiki](https://github.com/jaylouisw/intermap/wiki)
 
 ---
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/intermap&type=Date)](https://star-history.com/#YOUR_USERNAME/intermap&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=jaylouisw/intermap&type=Date)](https://star-history.com/#jaylouisw/intermap&Date)
 
 ---
 
@@ -309,7 +309,7 @@ docker run -d \- ✅ Verify installation
 
   --name intermap \- 🗺️ Launch Intermap node
 
-  YOUR_USERNAME/intermap:latest- 📡 Begin bandwidth testing
+  jaylouisw/intermap:latest- 📡 Begin bandwidth testing
 
 ```- 🌐 Start web visualizer
 
@@ -319,7 +319,7 @@ docker run -d \- ✅ Verify installation
 
 ```bashThat's it! Your node is now contributing to the distributed topology map.
 
-curl -O https://raw.githubusercontent.com/YOUR_USERNAME/intermap/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/jaylouisw/intermap/main/docker-compose.yml
 
 docker-compose up -d### Manual Installation (Advanced)
 
@@ -333,7 +333,7 @@ If you prefer manual setup:
 
 ```bash2. **Install Node.js**: https://nodejs.org/
 
-git clone https://github.com/YOUR_USERNAME/intermap.git3. **Setup Python environment**:
+git clone https://github.com/jaylouisw/intermap.git3. **Setup Python environment**:
 
 cd intermap   ```bash
 
@@ -761,13 +761,13 @@ Intermap uses an **aggressive comprehensive mapping strategy** for maximum cover
 
 ### Automatic Subnet Mapping
 
-- **Docker Hub**: https://hub.docker.com/r/YOUR_USERNAME/intermap- Every node automatically maps its entire /24 subnet (254 IPs)
+- **Docker Hub**: https://hub.docker.com/r/jaylouisw/intermap- Every node automatically maps its entire /24 subnet (254 IPs)
 
-- **GitHub**: https://github.com/YOUR_USERNAME/intermap- Example: If your IP is `203.0.113.45`, node maps `203.0.113.1-254`
+- **GitHub**: https://github.com/jaylouisw/intermap- Example: If your IP is `203.0.113.45`, node maps `203.0.113.1-254`
 
 - **Documentation**: See markdown files in repository- Provides comprehensive coverage of your network's routing perspective
 
-- **Issues**: https://github.com/YOUR_USERNAME/intermap/issues
+- **Issues**: https://github.com/jaylouisw/intermap/issues
 
 ### Multi-Perspective Mapping
 
@@ -907,3 +907,4 @@ For questions or collaboration: [Your Contact Info]
 ---
 
 **Status**: 🚧 Early Development - Core structure in place, implementations in progress
+

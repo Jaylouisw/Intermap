@@ -112,3 +112,4 @@ logging:
   file: "topology_node.log"
   max_size_mb: 10
   backup_count: 3
+

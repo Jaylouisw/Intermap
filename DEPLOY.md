@@ -31,7 +31,7 @@ Intermap uses GitHub Actions to automatically build and push Docker images to Do
    - Click **Generate** and **copy the token** (you won't see it again!)
 
 2. **Add Secrets to GitHub Repository**
-   - Go to your GitHub repo: `https://github.com/YOUR_USERNAME/intermap`
+   - Go to your GitHub repo: `https://github.com/jaylouisw/intermap`
    - Click **Settings** → **Secrets and variables** → **Actions**
    - Click **New repository secret**
    
@@ -107,7 +107,7 @@ Intermap uses GitHub Actions to automatically build and push Docker images to Do
    
    - Go to **Actions** tab in GitHub
    - Watch the build complete
-   - Check Docker Hub for your image: `https://hub.docker.com/r/YOUR_USERNAME/intermap`
+   - Check Docker Hub for your image: `https://hub.docker.com/r/jaylouisw/intermap`
 
 5. **Create a Release (Optional)**
    ```bash
@@ -115,7 +115,7 @@ Intermap uses GitHub Actions to automatically build and push Docker images to Do
    git push origin v1.0.0
    ```
    
-   This creates a versioned image: `YOUR_USERNAME/intermap:v1.0.0` and `YOUR_USERNAME/intermap:1.0`
+   This creates a versioned image: `jaylouisw/intermap:v1.0.0` and `jaylouisw/intermap:1.0`
 
 ---
 
@@ -124,7 +124,7 @@ Intermap uses GitHub Actions to automatically build and push Docker images to Do
 ### Docker Compose
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/intermap.git
+git clone https://github.com/jaylouisw/intermap.git
 cd intermap
 docker-compose up -d
 ```
@@ -446,7 +446,7 @@ python src/main.py
      --cap-add NET_ADMIN \
      --cap-add NET_RAW \
      --restart unless-stopped \
-     YOUR_USERNAME/intermap:latest
+     jaylouisw/intermap:latest
    ```
 
 5. **Set Up Firewall**
@@ -561,7 +561,7 @@ docker exec intermap python -m src.cli export --format gexf
 
 ```bash
 # Pull latest image
-docker pull YOUR_USERNAME/intermap:latest
+docker pull jaylouisw/intermap:latest
 
 # Stop and remove old container
 docker stop intermap
@@ -574,7 +574,7 @@ docker run -d \
   --cap-add NET_ADMIN \
   --cap-add NET_RAW \
   --restart unless-stopped \
-  YOUR_USERNAME/intermap:latest
+  jaylouisw/intermap:latest
 ```
 
 ---
@@ -671,10 +671,11 @@ docker restart intermap
 
 ## 🆘 Need Help?
 
-- **GitHub Issues**: [Report deployment problems](https://github.com/YOUR_USERNAME/intermap/issues)
-- **Discussions**: [Ask deployment questions](https://github.com/YOUR_USERNAME/intermap/discussions)
-- **Wiki**: [Check deployment wiki](https://github.com/YOUR_USERNAME/intermap/wiki/Deployment)
+- **GitHub Issues**: [Report deployment problems](https://github.com/jaylouisw/intermap/issues)
+- **Discussions**: [Ask deployment questions](https://github.com/jaylouisw/intermap/discussions)
+- **Wiki**: [Check deployment wiki](https://github.com/jaylouisw/intermap/wiki/Deployment)
 
 ---
 
 **Happy deploying!** 🚀 Help map the internet from the cloud!
+

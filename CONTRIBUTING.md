@@ -9,14 +9,14 @@ Thank you for your interest in contributing to Intermap! This document provides 
 The simplest way to contribute is to run an Intermap node:
 
 ```bash
-docker run -d --network host --cap-add NET_ADMIN --cap-add NET_RAW --name intermap YOUR_USERNAME/intermap:latest
+docker run -d --network host --cap-add NET_ADMIN --cap-add NET_RAW --name intermap jaylouisw/intermap:latest
 ```
 
 Leave it running 24/7 to continuously map your network and contribute to the global topology!
 
 ### 2. Report Bugs
 
-Found a bug? Please [open an issue](https://github.com/YOUR_USERNAME/intermap/issues/new) with:
+Found a bug? Please [open an issue](https://github.com/jaylouisw/intermap/issues/new) with:
 
 - **Clear title**: Summarize the problem
 - **Description**: What happened vs. what you expected
@@ -26,7 +26,7 @@ Found a bug? Please [open an issue](https://github.com/YOUR_USERNAME/intermap/is
 
 ### 3. Suggest Features
 
-Have an idea? [Start a discussion](https://github.com/YOUR_USERNAME/intermap/discussions) or open an issue with:
+Have an idea? [Start a discussion](https://github.com/jaylouisw/intermap/discussions) or open an issue with:
 
 - **Use case**: Why is this feature needed?
 - **Proposed solution**: How would it work?
@@ -51,7 +51,7 @@ We welcome pull requests! See below for developer setup and guidelines.
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/intermap.git
+git clone https://github.com/jaylouisw/intermap.git
 cd intermap
 
 # Create virtual environment
@@ -366,9 +366,9 @@ We especially need help with:
 
 ## ❓ Questions?
 
-- **GitHub Discussions**: [Ask questions](https://github.com/YOUR_USERNAME/intermap/discussions)
-- **GitHub Issues**: [Report problems](https://github.com/YOUR_USERNAME/intermap/issues)
-- **Wiki**: [Check the wiki](https://github.com/YOUR_USERNAME/intermap/wiki)
+- **GitHub Discussions**: [Ask questions](https://github.com/jaylouisw/intermap/discussions)
+- **GitHub Issues**: [Report problems](https://github.com/jaylouisw/intermap/issues)
+- **Wiki**: [Check the wiki](https://github.com/jaylouisw/intermap/wiki)
 
 ## 📜 License
 
@@ -377,3 +377,4 @@ By contributing to Intermap, you agree that your contributions will be licensed 
 ---
 
 **Thank you for contributing to Intermap!** 🌐 Together we're mapping the internet!
+

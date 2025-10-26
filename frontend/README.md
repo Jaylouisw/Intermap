@@ -41,3 +41,4 @@ Creates optimized production build in `build/` directory.
 - [ ] Show node details on click
 - [ ] Add graph layout algorithms
 - [ ] Implement real-time updates via WebSocket or IPFS PubSub
+

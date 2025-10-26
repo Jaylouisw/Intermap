@@ -29,7 +29,7 @@ All documentation has been updated:
 
 ### 1.2 Add GitHub Secrets
 
-1. Go to your repo: **https://github.com/YOUR_USERNAME/intermap**
+1. Go to your repo: **https://github.com/jaylouisw/intermap**
 2. Click: **Settings** → **Secrets and variables** → **Actions**
 3. Click: **New repository secret**
 
@@ -47,18 +47,18 @@ Value: [paste the token from step 1.1]
 
 ### 1.3 Update Repository URLs
 
-Replace `YOUR_USERNAME` in these files with your actual GitHub/Docker Hub username:
+Replace `jaylouisw` in these files with your actual GitHub/Docker Hub username:
 
 ```bash
 # Update README.md
-sed -i 's/YOUR_USERNAME/jaywendendev/g' README.md
+sed -i 's/jaylouisw/jaywendendev/g' README.md
 
 # Update all markdown files
-find . -name "*.md" -type f -exec sed -i 's/YOUR_USERNAME/jaywendendev/g' {} +
+find . -name "*.md" -type f -exec sed -i 's/jaylouisw/jaywendendev/g' {} +
 
 # Windows PowerShell:
 Get-ChildItem -Recurse -Include *.md | ForEach-Object {
-    (Get-Content $_) -replace 'YOUR_USERNAME', 'jaywendendev' | Set-Content $_
+    (Get-Content $_) -replace 'jaylouisw', 'jaywendendev' | Set-Content $_
 }
 ```
 
@@ -95,11 +95,11 @@ git commit -m "chore: update repository URLs and setup CI"
 git push origin master
 
 # Watch the build
-# Go to: https://github.com/YOUR_USERNAME/intermap/actions
+# Go to: https://github.com/jaylouisw/intermap/actions
 ```
 
 After ~5-10 minutes, check Docker Hub:
-- Visit: **https://hub.docker.com/r/YOUR_USERNAME/intermap**
+- Visit: **https://hub.docker.com/r/jaylouisw/intermap**
 - You should see the `latest` tag
 
 ---
@@ -128,7 +128,7 @@ git push origin v1.0.0
 
 ### 2.2 Create GitHub Release
 
-1. Go to: **https://github.com/YOUR_USERNAME/intermap/releases/new**
+1. Go to: **https://github.com/jaylouisw/intermap/releases/new**
 2. Select tag: **v1.0.0**
 3. Release title: **Intermap v1.0.0 - Internet Topology Mapper**
 4. Description:
@@ -151,7 +151,7 @@ The first stable release of Intermap - a distributed internet topology mapper!
 
 **Docker:**
 ```bash
-docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW YOUR_USERNAME/intermap:v1.0.0
+docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW jaylouisw/intermap:v1.0.0
 ```
 
 **Docker Compose:**
@@ -297,7 +297,7 @@ docker run -d \
   --cap-add NET_ADMIN \
   --cap-add NET_RAW \
   --restart unless-stopped \
-  YOUR_USERNAME/intermap:latest
+  jaylouisw/intermap:latest
 
 # 6. Setup firewall
 ufw allow 22/tcp    # SSH
@@ -354,18 +354,18 @@ git pull origin master
 git push origin master
 
 # Or manually:
-docker build -t YOUR_USERNAME/intermap:latest .
-docker push YOUR_USERNAME/intermap:latest
+docker build -t jaylouisw/intermap:latest .
+docker push jaylouisw/intermap:latest
 ```
 
 ### Update Running Containers
 
 **Docker:**
 ```bash
-docker pull YOUR_USERNAME/intermap:latest
+docker pull jaylouisw/intermap:latest
 docker stop intermap
 docker rm intermap
-docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW YOUR_USERNAME/intermap:latest
+docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW jaylouisw/intermap:latest
 ```
 
 **Railway/Render**: Auto-deploys on git push
@@ -378,7 +378,7 @@ flyctl deploy
 **DigitalOcean VPS**:
 ```bash
 ssh root@YOUR_DROPLET_IP
-docker pull YOUR_USERNAME/intermap:latest
+docker pull jaylouisw/intermap:latest
 docker restart intermap
 ```
 
@@ -388,7 +388,7 @@ docker restart intermap
 
 ### Check Docker Hub
 
-Visit: **https://hub.docker.com/r/YOUR_USERNAME/intermap**
+Visit: **https://hub.docker.com/r/jaylouisw/intermap**
 
 Should see:
 - ✅ `latest` tag (from master branch)
@@ -398,7 +398,7 @@ Should see:
 
 ### Check GitHub Actions
 
-Visit: **https://github.com/YOUR_USERNAME/intermap/actions**
+Visit: **https://github.com/jaylouisw/intermap/actions**
 
 Should see:
 - ✅ Green checkmarks for builds
@@ -409,8 +409,8 @@ Should see:
 
 ```bash
 # Pull and run your image
-docker pull YOUR_USERNAME/intermap:latest
-docker run -d --name test-intermap -p 8000:8000 YOUR_USERNAME/intermap:latest
+docker pull jaylouisw/intermap:latest
+docker run -d --name test-intermap -p 8000:8000 jaylouisw/intermap:latest
 
 # Check logs
 docker logs -f test-intermap
@@ -438,8 +438,8 @@ docker rm test-intermap
 Update these URLs in README.md:
 
 ```markdown
-[![Docker Build](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml/badge.svg)](https://github.com/YOUR_USERNAME/intermap/actions/workflows/docker-build.yml)
-[![Docker Hub](https://img.shields.io/docker/pulls/YOUR_USERNAME/intermap)](https://hub.docker.com/r/YOUR_USERNAME/intermap)
+[![Docker Build](https://github.com/jaylouisw/intermap/actions/workflows/docker-build.yml/badge.svg)](https://github.com/jaylouisw/intermap/actions/workflows/docker-build.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/jaylouisw/intermap)](https://hub.docker.com/r/jaylouisw/intermap)
 ```
 
 ### Repository Settings
@@ -475,7 +475,7 @@ Enable:
 
 Tell people to run:
 ```bash
-docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW YOUR_USERNAME/intermap:latest
+docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_RAW jaylouisw/intermap:latest
 ```
 
 ### Next Steps
@@ -490,10 +490,11 @@ docker run -d --name intermap --network host --cap-add NET_ADMIN --cap-add NET_R
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/intermap/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/intermap/discussions)
-- **Wiki**: [Project Wiki](https://github.com/YOUR_USERNAME/intermap/wiki)
+- **Issues**: [GitHub Issues](https://github.com/jaylouisw/intermap/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jaylouisw/intermap/discussions)
+- **Wiki**: [Project Wiki](https://github.com/jaylouisw/intermap/wiki)
 
 ---
 
 **Happy deploying!** 🚀 Your internet mapping project is now live!
+

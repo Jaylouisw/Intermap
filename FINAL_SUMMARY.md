@@ -173,7 +173,7 @@ config/default.yaml            ✅ Well-known targets configured
    - Click **Generate** and copy the token
 
 2. **Add to GitHub**:
-   - Go to: https://github.com/YOUR_USERNAME/intermap/settings/secrets/actions
+   - Go to: https://github.com/jaylouisw/intermap/settings/secrets/actions
    - Click **"New repository secret"**
    - Add two secrets:
      ```
@@ -190,9 +190,9 @@ config/default.yaml            ✅ Well-known targets configured
    ```
 
 4. **Watch Build**:
-   - Go to: https://github.com/YOUR_USERNAME/intermap/actions
+   - Go to: https://github.com/jaylouisw/intermap/actions
    - Watch the Docker build complete
-   - Check Docker Hub: https://hub.docker.com/r/YOUR_USERNAME/intermap
+   - Check Docker Hub: https://hub.docker.com/r/jaylouisw/intermap
 
 ### Step 2: Create First Release
 
@@ -204,7 +204,7 @@ git tag -a v1.0.0 -m "Release v1.0.0 - Multi-gigabit internet topology mapper"
 git push origin v1.0.0
 
 # Create GitHub release at:
-# https://github.com/YOUR_USERNAME/intermap/releases/new
+# https://github.com/jaylouisw/intermap/releases/new
 ```
 
 ### Step 3: Deploy to Free Tier Platform
@@ -245,17 +245,17 @@ flyctl deploy
 1. Create $6/mo droplet (Ubuntu 22.04)
 2. SSH in: `ssh root@YOUR_IP`
 3. Install Docker: `curl -fsSL https://get.docker.com | sh`
-4. Run: `docker run -d --network host --cap-add NET_ADMIN --cap-add NET_RAW YOUR_USERNAME/intermap:latest`
+4. Run: `docker run -d --network host --cap-add NET_ADMIN --cap-add NET_RAW jaylouisw/intermap:latest`
 
 ### Step 4: Update README URLs
 
-Replace `YOUR_USERNAME` with your actual username:
+Replace `jaylouisw` with your actual username:
 
 ```powershell
 # In PowerShell
 $files = Get-ChildItem -Recurse -Include *.md
 foreach ($file in $files) {
-    (Get-Content $file.FullName) -replace 'YOUR_USERNAME', 'your-actual-username' | Set-Content $file.FullName
+    (Get-Content $file.FullName) -replace 'jaylouisw', 'your-actual-username' | Set-Content $file.FullName
 }
 
 git add .
@@ -267,10 +267,10 @@ git push origin master
 
 ```powershell
 # Pull your image
-docker pull YOUR_USERNAME/intermap:latest
+docker pull jaylouisw/intermap:latest
 
 # Run it
-docker run -d -p 8000:8000 --cap-add NET_ADMIN --cap-add NET_RAW --name test-intermap YOUR_USERNAME/intermap:latest
+docker run -d -p 8000:8000 --cap-add NET_ADMIN --cap-add NET_RAW --name test-intermap jaylouisw/intermap:latest
 
 # Check logs
 docker logs -f test-intermap
@@ -401,7 +401,7 @@ Before going live:
 - [ ] Create v1.0.0 release
 - [ ] Deploy to one free platform
 - [ ] Test deployment works
-- [ ] Update YOUR_USERNAME in docs
+- [ ] Update jaylouisw in docs
 - [ ] Add repository description
 - [ ] Enable Discussions/Wiki
 - [ ] Share on social media!
@@ -431,3 +431,4 @@ If you need help with any step, check:
 - 📄 CONTRIBUTING.md (development)
 
 **Happy mapping!** 🌐
+

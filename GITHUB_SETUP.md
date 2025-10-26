@@ -35,10 +35,10 @@ git commit -m "Initial commit: Intermap distributed network topology mapper"
 
 ## Step 3: Push to GitHub
 
-Replace `YOUR_USERNAME` with your GitHub username:
+Replace `jaylouisw` with your GitHub username:
 
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/intermap.git
+git remote add origin https://github.com/jaylouisw/intermap.git
 git branch -M main
 git push -u origin main
 ```
@@ -52,7 +52,7 @@ git push -u origin main
 
 ## Step 5: Add Secrets to GitHub
 
-1. Go to your GitHub repo: `https://github.com/YOUR_USERNAME/intermap`
+1. Go to your GitHub repo: `https://github.com/jaylouisw/intermap`
 2. Click **Settings** > **Secrets and variables** > **Actions**
 3. Click **"New repository secret"**
 4. Add these two secrets:
@@ -85,17 +85,17 @@ Watch the build:
 - Go to your repo > **Actions** tab
 - You'll see the build running
 - Takes ~10-15 minutes first time
-- Docker image will appear at: `docker.io/YOUR_USERNAME/intermap:latest`
+- Docker image will appear at: `docker.io/jaylouisw/intermap:latest`
 
 ## Users Can Now Deploy With:
 
 ```bash
-docker run -d -p 8000:8000 YOUR_USERNAME/intermap:latest
+docker run -d -p 8000:8000 jaylouisw/intermap:latest
 ```
 
 Or:
 ```bash
-docker pull YOUR_USERNAME/intermap:latest
+docker pull jaylouisw/intermap:latest
 docker-compose up -d
 ```
 
@@ -122,3 +122,4 @@ git push origin v2.0.1
 ```
 
 GitHub Actions will automatically build and push the new version!
+
