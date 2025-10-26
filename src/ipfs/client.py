@@ -96,15 +96,16 @@ class IPFSClient:
         self.connected = False
         logger.info("Disconnected from IPFS")
     
-    async def announce_node(self, node_id: str, external_ip: str, api_port: int = 5000) -> Optional[str]:
+    async def announce_node(self, node_id: str, external_ip: str, api_port: int = 5000, iperf3_port: int = 5201) -> Optional[str]:
         """
-        Announce node presence to IPFS network using DHT.
-        Publishes node info to IPFS and pins it for discoverability.
+        Announce node presence to IPFS network using DHT provider records.
+        Publishes node info to IPFS and advertises as provider for the rendezvous key.
         
         Args:
             node_id: Unique node identifier
             external_ip: External IP address
             api_port: API server port
+            iperf3_port: iperf3 server port
             
         Returns:
             CID of published node info
@@ -117,6 +118,7 @@ class IPFSClient:
                 "node_id": node_id,
                 "external_ip": external_ip,
                 "api_port": api_port,
+                "iperf3_port": iperf3_port,
                 "timestamp": time.time(),
                 "protocol_version": "intermap-v1"
             }
@@ -125,16 +127,35 @@ class IPFSClient:
             cid = await self.add_json(node_info)
             self._node_info_cid = cid
             
-            # Pin it so it stays available
             loop = asyncio.get_event_loop()
+            
+            # Pin it so it stays available
             await loop.run_in_executor(
                 self._executor,
                 self.client.pin.add,
                 cid
             )
             
-            logger.info(f"Announced node to IPFS: {cid}")
-            logger.info(f"Node: {node_id} @ {external_ip}:{api_port}")
+            # CRITICAL: Advertise as provider for the rendezvous key in DHT
+            # This is how other nodes will discover us
+            # Use HTTP API directly - newer IPFS versions use 'routing provide'
+            try:
+                import requests
+                api_url = "http://127.0.0.1:5001/api/v0/routing/provide"
+                params = {'arg': self.RENDEZVOUS_KEY}
+                response = requests.post(api_url, params=params, timeout=30)
+                if response.status_code == 200:
+                    logger.info(f"✓ Announced node to DHT: {cid}")
+                    logger.info(f"  Node ID: {node_id}")
+                    logger.info(f"  External IP: {external_ip}")
+                    logger.info(f"  iperf3: Port {iperf3_port}")
+                    logger.info(f"  DHT Provider for: {self.RENDEZVOUS_KEY}")
+                else:
+                    logger.warning(f"DHT provider advertisement returned: {response.status_code}")
+                    logger.info(f"Announced node to IPFS (no DHT): {cid}")
+            except Exception as e:
+                logger.warning(f"DHT provider advertisement failed: {e}")
+                logger.info(f"Announced node to IPFS (no DHT): {cid}")
             
             return cid
             
@@ -144,8 +165,8 @@ class IPFSClient:
     
     async def discover_peers(self) -> List[Dict]:
         """
-        Discover peer nodes by querying IPFS for known node CIDs.
-        Uses IPFS peer discovery + direct CID fetching.
+        Discover peer nodes by querying DHT for providers of the rendezvous key.
+        This is how nodes find each other in a fully decentralized way.
         
         Returns:
             List of peer node info dictionaries
@@ -157,18 +178,42 @@ class IPFSClient:
             peers = []
             loop = asyncio.get_event_loop()
             
-            # Get connected IPFS peers
+            # Query DHT for providers of the rendezvous key
+            # These are all Intermap nodes that have announced themselves
+            try:
+                # Use newer routing findprovs API
+                import requests
+                api_url = "http://127.0.0.1:5001/api/v0/routing/findprovs"
+                params = {'arg': self.RENDEZVOUS_KEY, 'num-providers': 20}
+                response = requests.post(api_url, params=params, timeout=30, stream=True)
+                
+                if response.status_code == 200:
+                    # Parse NDJSON responses
+                    provider_count = 0
+                    for line in response.iter_lines():
+                        if line:
+                            try:
+                                result = json.loads(line)
+                                if result.get('Type') == 4:  # Provider response
+                                    provider_count += 1
+                                    peer_id = result.get('Responses', [{}])[0].get('ID')
+                                    if peer_id:
+                                        logger.info(f"Found Intermap node via DHT: {peer_id}")
+                            except:
+                                pass
+                    logger.info(f"DHT query found {provider_count} Intermap nodes")
+                else:
+                    logger.debug(f"DHT findprovs returned: {response.status_code}")
+                        
+            except Exception as e:
+                logger.debug(f"DHT findprovs error: {e}")
+            
+            # Also check connected IPFS swarm peers
             def _get_swarm_peers():
                 return self.client.swarm.peers()
             
             swarm_peers = await loop.run_in_executor(self._executor, _get_swarm_peers)
-            logger.debug(f"Connected to {len(swarm_peers)} IPFS peers")
-            
-            # Try to find intermap nodes through DHT routing
-            # We'll use IPFS name resolution and content discovery
-            
-            # For now, nodes will share their CIDs through the IPFS network
-            # Future: implement IPNS for mutable peer lists
+            logger.debug(f"Connected to {len(swarm_peers)} IPFS swarm peers")
             
             return peers
             
