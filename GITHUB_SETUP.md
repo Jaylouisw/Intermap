@@ -1,4 +1,14 @@
+<!--
+Intermap - GitHub Setup & Automated Docker Builds
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+-->
+
 # GitHub Setup & Automated Docker Builds
+
+*Created by Jay Wenden*
+
+---
 
 ## Step 1: Initialize Git Repository
 

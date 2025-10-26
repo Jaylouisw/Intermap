@@ -1,4 +1,9 @@
 """
+Intermap - Distributed P2P Internet Topology Mapper
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+"""
+"""
 API server for serving topology data to the frontend
 """
 from flask import Flask, jsonify, send_file, send_from_directory, request

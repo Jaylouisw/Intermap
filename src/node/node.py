@@ -1,4 +1,9 @@
 """
+Intermap - Distributed P2P Internet Topology Mapper
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+"""
+"""
 Main node implementation for the distributed topology mapper
 """
 import asyncio

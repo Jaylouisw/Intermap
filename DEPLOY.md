@@ -1,19 +1,41 @@
+<!--
+Intermap - Deployment Instructions
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+-->
+
 # Intermap - Deployment Instructions
 
 ## Quick Deploy (Machine with Docker Already Installed)
 
 ### Option 1: Pre-built Image (Easiest!)
 ```bash
-# Just run - no build needed!
+# Host networking (recommended for accurate topology)
+docker run -d \
+  --network host \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
+  --name intermap \
+  yourusername/intermap:latest
+
+# Or with port mapping (more isolated but less accurate)
 docker run -d \
   -p 8000:8000 \
   -p 5000:5000 \
   -p 5001:5001 \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
   --name intermap \
   yourusername/intermap:latest
 ```
 
 **That's it!** Access at http://localhost:8000
+
+**Why host networking?**
+- Shows real network path, not container NAT
+- Better IPFS peer discovery
+- More accurate topology mapping
+- Essential for traceroute to work correctly
 
 ### Option 2: With Docker Compose (Recommended)
 Create a `docker-compose.yml`:
@@ -22,13 +44,12 @@ version: '3.8'
 services:
   intermap:
     image: yourusername/intermap:latest
-    ports:
-      - "8000:8000"
-      - "5000:5000"
-      - "5001:5001"
-      - "4001:4001"
+    network_mode: host  # Uses host network for accurate topology
     volumes:
-      - ipfs-data:/root/.ipfs
+      - ipfs-data:/home/intermap/.ipfs
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     restart: unless-stopped
 
 volumes:
@@ -39,6 +60,8 @@ Then run:
 ```bash
 docker-compose up -d
 ```
+
+**Note:** Host networking works best on Linux. On Mac/Windows with Docker Desktop, use port mapping instead (see Option 1).
 
 ### Option 3: Build from Source
 ```bash

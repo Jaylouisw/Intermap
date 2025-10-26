@@ -1,3 +1,9 @@
+/**
+ * Intermap - Distributed P2P Internet Topology Mapper
+ * Copyright (c) 2025 Jay Wenden
+ * Licensed under CC-BY-NC-SA 4.0
+ */
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import NetworkGraph from './components/NetworkGraph';

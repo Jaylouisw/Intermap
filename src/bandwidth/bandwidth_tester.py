@@ -1,4 +1,9 @@
 """
+Intermap - Distributed P2P Internet Topology Mapper
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+"""
+"""
 Bandwidth testing module - iperf3 and speedtest integration
 """
 import logging

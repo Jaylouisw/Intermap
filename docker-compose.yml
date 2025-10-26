@@ -6,19 +6,27 @@ services:
     # image: yourusername/intermap:latest
     build: .
     container_name: intermap
-    ports:
-      - "5000:5000"  # API server
-      - "8000:8000"  # Web UI
-      - "5001:5001"  # IPFS API
-      - "4001:4001"  # IPFS Swarm
+    
+    # Host networking recommended for accurate network topology
+    # Container uses host's network stack directly
+    network_mode: host
+    
+    # Alternative: Bridge networking (less accurate but more isolated)
+    # Uncomment these lines and comment out network_mode above to use bridge:
+    # ports:
+    #   - "5000:5000"  # API server
+    #   - "8000:8000"  # Web UI
+    #   - "5001:5001"  # IPFS API
+    #   - "4001:4001"  # IPFS Swarm
+    # networks:
+    #   - intermap-network
+    
     volumes:
       - intermap-data:/home/intermap/.ipfs
       - ./output:/app/output
     environment:
       - IPFS_PATH=/home/intermap/.ipfs
     restart: unless-stopped
-    networks:
-      - intermap-network
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -26,6 +34,8 @@ services:
 volumes:
   intermap-data:
 
-networks:
-  intermap-network:
-    driver: bridge
+# Networks section not needed with host networking
+# Uncomment if using bridge networking (see comments above)
+# networks:
+#   intermap-network:
+#     driver: bridge

@@ -1,4 +1,14 @@
+<!--
+Intermap - Testing Guide
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+-->
+
 # Intermap Testing Guide
+
+*Created by Jay Wenden*
+
+---
 
 ## Testing Node Discovery and Traceroute
 
@@ -7,7 +17,7 @@ This guide explains how to test Intermap with two nodes on different networks.
 ## Prerequisites
 
 - Two computers on different networks (different locations, different ISPs)
-- IPFS daemon running on both
+- Docker installed on both
 - Python 3.9+ and all dependencies installed on both
 - Administrator/sudo privileges for traceroute
 

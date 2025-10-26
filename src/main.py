@@ -1,4 +1,9 @@
 """
+Intermap - Distributed P2P Internet Topology Mapper
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+"""
+"""
 Main entry point for running a topology mapper node
 """
 import asyncio

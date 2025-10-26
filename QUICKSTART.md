@@ -1,6 +1,219 @@
+<!--
+Intermap - Quick Start Guide
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+-->
+
 # 🗺️ Intermap - Quick Start Guide
 
+*Created by Jay Wenden*
+
 ## Run with Docker (Easiest)
+
+### 1. Pull and run the image:
+```bash
+docker run -d \
+  --network host \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
+  --name intermap \
+  yourusername/intermap:latest
+```
+
+### 2. Access the interface:
+- **Web UI**: http://localhost:8000
+- **API**: http://localhost:5000
+- **IPFS WebUI**: http://localhost:5001/webui
+
+### 3. Check logs:
+```bash
+docker logs -f intermap
+```
+
+### 4. Stop:
+```bash
+docker stop intermap
+docker rm intermap
+```
+
+---
+
+## What is Intermap?
+
+A **fully distributed P2P network topology mapper** where:
+- Participants run Docker containers that perform traceroutes
+- Each hop becomes a node, RTT becomes edge weight
+- Data stored on IPFS (distributed, no central server)
+- Creates collaborative internet infrastructure map
+- Export to GEXF format for Gephi analysis
+
+---
+
+## Privacy & Security
+
+✅ **Only public IPs shared** - RFC1918 private addresses automatically filtered  
+✅ **Anonymous participation** - No identity data collected  
+✅ **Distributed storage** - IPFS content addressing  
+✅ **No central authority** - Pure P2P coordination via IPFS DHT
+
+---
+
+## Requirements
+
+- **Docker** (that's it!)
+- 2GB RAM minimum
+- 500MB disk space
+
+Install Docker: https://www.docker.com/products/docker-desktop/
+
+---
+
+## Alternative: Docker Compose
+
+Create `docker-compose.yml`:
+```yaml
+version: '3.8'
+services:
+  intermap:
+    image: yourusername/intermap:latest
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ipfs-data:/home/intermap/.ipfs
+    restart: unless-stopped
+
+volumes:
+  ipfs-data:
+```
+
+Then:
+```bash
+docker-compose up -d
+```
+
+---
+
+## Configuration
+
+Environment variables:
+```bash
+docker run -d \
+  --network host \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
+  -e NODE_UPDATE_INTERVAL=300 \
+  -e TARGET_SUBNET="8.8.8.0/28" \
+  --name intermap \
+  yourusername/intermap:latest
+```
+
+Or mount custom config:
+```bash
+docker run -d \
+  --network host \
+  -v ./config.yaml:/app/config/default.yaml \
+  --name intermap \
+  yourusername/intermap:latest
+```
+
+---
+
+## Troubleshooting
+
+### Docker not installed?
+```bash
+# Check
+docker --version
+
+# Install from https://www.docker.com/products/docker-desktop/
+```
+
+### Can't access Web UI?
+- Check container is running: `docker ps`
+- View logs: `docker logs intermap`
+- Try: http://127.0.0.1:8000
+
+### IPFS not connecting?
+- IPFS daemon starts automatically in container
+- Check: http://localhost:5001/webui
+- May take 30-60s to find peers on first run
+- View peers: `docker exec intermap ipfs swarm peers`
+
+### Traceroute not working?
+- Container needs NET_ADMIN and NET_RAW capabilities (already included)
+- Some networks block ICMP/UDP
+- Check logs for errors
+
+### Port conflicts?
+Use bridge networking instead:
+```bash
+docker run -d \
+  -p 8001:8000 \
+  -p 5001:5000 \
+  --cap-add NET_ADMIN \
+  --cap-add NET_RAW \
+  --name intermap \
+  yourusername/intermap:latest
+```
+
+---
+
+## Architecture
+
+### Container Includes:
+- Python 3.11 runtime
+- Kubo IPFS daemon
+- React frontend (pre-built)
+- Traceroute tools
+- Bandwidth testing (iperf3)
+
+### P2P Coordination:
+1. Node announces via IPFS CID
+2. Discovers peers through DHT
+3. Publishes topology to IPFS
+4. Pins content for availability
+5. No central server needed!
+
+---
+
+## Advanced Usage
+
+### View IPFS node info:
+```bash
+docker exec intermap ipfs id
+```
+
+### Export topology:
+```bash
+docker cp intermap:/app/output/topology_latest.gexf ./
+```
+
+### Custom traceroute targets:
+Edit `config/default.yaml`:
+```yaml
+node:
+  target_subnet: "1.1.1.0/28"  # Change this
+```
+
+### View in Gephi:
+1. Download Gephi: https://gephi.org/
+2. Open `topology_latest.gexf`
+3. Apply Force Atlas 2 layout
+4. Color edges by RTT weight
+
+---
+
+## License
+
+**CC-BY-NC-SA 4.0** - Copyright (c) 2025 Jay Wenden
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+**Created by Jay Wenden** | [GitHub](https://github.com/YOUR_USERNAME/intermap)
 
 ### 1. Build the image:
 ```bash

@@ -1,4 +1,8 @@
 """
+Intermap - Distributed P2P Internet Topology Mapper
+Copyright (c) 2025 Jay Wenden
+Licensed under CC-BY-NC-SA 4.0
+
 Intermap Docker Deployment Script
 Waits for Docker, builds image, and deploys container
 """
