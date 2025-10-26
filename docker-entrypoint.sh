@@ -17,10 +17,19 @@ IPFS_PID=$!
 # Wait for IPFS to be ready
 sleep 5
 
+# Start simple HTTP server for frontend in background
+echo "Starting web interface on port 8000..."
+cd /app/frontend/build
+python3 -m http.server 8000 &
+WEB_PID=$!
+
+cd /app
+
 # Trap exit signals to cleanup
 cleanup() {
-    echo "Stopping IPFS daemon..."
+    echo "Stopping services..."
     kill $IPFS_PID 2>/dev/null || true
+    kill $WEB_PID 2>/dev/null || true
     exit 0
 }
 trap cleanup SIGTERM SIGINT
