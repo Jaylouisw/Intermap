@@ -53,8 +53,8 @@ COPY --from=builder /usr/local/bin/ipfs /usr/local/bin/ipfs
 
 # Create app user
 RUN useradd -m -u 1000 intermap && \
-    mkdir -p /home/intermap/.ipfs && \
-    chown -R intermap:intermap /home/intermap
+    mkdir -p /home/intermap/.ipfs /app/output && \
+    chown -R intermap:intermap /home/intermap /app/output
 
 # Set working directory
 WORKDIR /app
