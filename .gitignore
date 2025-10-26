@@ -94,6 +94,12 @@ README.md.backup
 DEPLOY.md.backup
 QUICKSTART.md.old
 
+# Maintainer-only documentation (internal notes, not for end users)
+DEPLOYMENT_INSTRUCTIONS.md
+FINAL_SUMMARY.md
+GITHUB_SETUP.md
+MOBILITY.md
+
 # Build artifacts
 *.tar
 *.gz

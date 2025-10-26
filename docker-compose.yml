@@ -14,9 +14,7 @@ services:
     # Alternative: Bridge networking (less accurate but more isolated)
     # Uncomment these lines and comment out network_mode above to use bridge:
     # ports:
-    #   - "5000:5000"  # API server
-    #   - "8000:8000"  # Web UI
-    #   - "5001:5001"  # IPFS API
+    #   - "5000:5000"  # Web UI and API server (consolidated)
     #   - "4001:4001"  # IPFS Swarm
     #   - "5201:5201"  # iperf3 server
     # networks:
