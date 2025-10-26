@@ -24,6 +24,7 @@ from src.traceroute.tracer import Traceroute, detect_local_subnet, get_live_subn
 from src.graph.gexf_generator import NetworkGraph, GEXFGenerator
 from src.bandwidth.bandwidth_tester import IPerf3Client, SpeedtestClient, BandwidthTestManager
 from src.nat_detection import detect_nat, test_connectivity
+from src.utils import is_private_ip
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,11 @@ class TopologyNode:
         # Components
         self.ipfs_client: Optional[IPFSClient] = None
         self.tracer: Optional[Traceroute] = None
-        self.network_graph = NetworkGraph()
+        
+        # Two separate graphs for privacy
+        self.local_graph = NetworkGraph()  # Full topology including private IPs (for own visualization)
+        self.network_graph = NetworkGraph()  # Only public IPs (for IPFS sharing)
+        
         self.bandwidth_manager: Optional[BandwidthTestManager] = None
         
         # Background tasks
@@ -297,8 +302,12 @@ class TopologyNode:
                 # Add live hosts to trace targets AND to the graph
                 # ANY IP that responds to ping goes in the map
                 for ip in live_hosts:
-                    # Add to graph immediately (responsive IP)
-                    self.network_graph.add_node(ip, hostname=ip)
+                    # Add to local graph (includes private IPs)
+                    self.local_graph.add_node(ip, hostname=ip)
+                    
+                    # Add to network graph only if public
+                    if not is_private_ip(ip):
+                        self.network_graph.add_node(ip, hostname=ip)
                     
                     if ip != self.external_ip:  # Don't trace to self
                         self.trace_targets.add(ip)
@@ -367,11 +376,14 @@ class TopologyNode:
             # (Keep it for now to show path history - could be disabled with config)
             cleanup_old = self.config.get("node", {}).get("mobility", {}).get("cleanup_old_location", False)
             if cleanup_old:
-                # Remove nodes from old subnet that we mapped
-                old_subnet_nodes = [ip for ip in self.network_graph.nodes.keys() 
-                                   if ip.startswith('.'.join(old_ip.split('.')[0:3]))]
+                # Remove nodes from old subnet that we mapped (from both graphs)
+                old_subnet_prefix = '.'.join(old_ip.split('.')[0:3])
+                old_subnet_nodes = [ip for ip in self.local_graph.nodes.keys() 
+                                   if ip.startswith(old_subnet_prefix)]
                 for node_ip in old_subnet_nodes:
-                    self.network_graph.remove_node(node_ip)
+                    self.local_graph.remove_node(node_ip)
+                    if node_ip in self.network_graph.nodes:
+                        self.network_graph.remove_node(node_ip)
                 logger.info(f"Cleaned up {len(old_subnet_nodes)} nodes from old location")
             
             logger.info(f"✅ Mobility handling complete - now mapping from new location")
@@ -599,8 +611,11 @@ class TopologyNode:
                 
                 # Remove dead IPs from graph
                 for ip in ips_to_remove:
+                    # Remove from both graphs
+                    if ip in self.local_graph.nodes:
+                        logger.info(f"Removing dead IP {ip} from graphs")
+                        self.local_graph.remove_node(ip)
                     if ip in self.network_graph.nodes:
-                        logger.info(f"Removing dead IP {ip} from network graph")
                         self.network_graph.remove_node(ip)
                     
                     # Clean up tracking
@@ -627,8 +642,8 @@ class TopologyNode:
             try:
                 await asyncio.sleep(300)  # Check every 5 minutes
                 
-                # Get all IPs currently in the map
-                all_ips = list(self.network_graph.nodes.keys())
+                # Get all IPs currently in the map (use local_graph which has all IPs)
+                all_ips = list(self.local_graph.nodes.keys())
                 
                 if not all_ips:
                     logger.debug("No IPs in map yet")
@@ -770,19 +785,38 @@ class TopologyNode:
                         hops = self.tracer.trace(target_ip)
                         
                         if hops:
-                            # Add to graph
+                            # Add ALL hops to local graph (for user's own visualization)
                             for i, hop in enumerate(hops):
-                                self.network_graph.add_node(hop.ip_address, hop.hostname)
+                                self.local_graph.add_node(hop.ip_address, hop.hostname)
                                 
-                                # Add edge between consecutive hops
                                 if i > 0:
                                     prev_hop = hops[i-1]
                                     rtt_diff = abs(hop.rtt_ms - prev_hop.rtt_ms)
-                                    self.network_graph.add_edge(
+                                    self.local_graph.add_edge(
                                         prev_hop.ip_address,
                                         hop.ip_address,
                                         rtt_ms=rtt_diff
                                     )
+                            
+                            # Add ONLY public IPs to network graph (for IPFS sharing)
+                            for i, hop in enumerate(hops):
+                                # Skip private IPs for shared graph
+                                if not is_private_ip(hop.ip_address):
+                                    self.network_graph.add_node(hop.ip_address, hop.hostname)
+                                    
+                                    # Connect to previous public hop
+                                    if i > 0:
+                                        # Find previous public hop
+                                        for j in range(i-1, -1, -1):
+                                            prev_hop = hops[j]
+                                            if not is_private_ip(prev_hop.ip_address):
+                                                rtt_diff = abs(hop.rtt_ms - prev_hop.rtt_ms)
+                                                self.network_graph.add_edge(
+                                                    prev_hop.ip_address,
+                                                    hop.ip_address,
+                                                    rtt_ms=rtt_diff
+                                                )
+                                                break
                             
                             # Mark as reachable
                             if target_ip in self.ip_reachability:
@@ -816,7 +850,7 @@ class TopologyNode:
                                 )
                             
                             # If IP is in graph, request verification from all nodes
-                            if target_ip in self.network_graph.nodes:
+                            if target_ip in self.local_graph.nodes:
                                 logger.warning(f"IP {target_ip} is in graph but unreachable - requesting verification")
                                 self.ip_reachability[target_ip].verification_pending = True
                                 
@@ -865,8 +899,8 @@ class TopologyNode:
                 logger.info("STARTING BANDWIDTH TEST CYCLE")
                 logger.info("=" * 60)
                 
-                # Collect all IPs from the graph
-                all_ips = set(self.network_graph.nodes.keys())
+                # Collect all IPs from the graph (use local_graph which has all IPs)
+                all_ips = set(self.local_graph.nodes.keys())
                 
                 # Add peer IPs
                 for peer in self.peer_nodes.values():
@@ -907,11 +941,11 @@ class TopologyNode:
                 for result, hops in results:
                     logger.info(f"Applying bandwidth to path for {result.target}: {len(hops)} hops")
                     
-                    # Add all hops to graph (ANY IP in traceroute goes in the map)
+                    # Add ALL hops to local graph
                     for hop in hops:
-                        self.network_graph.add_node(hop.ip_address, hop.hostname)
+                        self.local_graph.add_node(hop.ip_address, hop.hostname)
                     
-                    # Apply bandwidth to ALL edges in the path
+                    # Apply bandwidth to ALL edges in the local graph path
                     for i in range(len(hops) - 1):
                         hop1 = hops[i]
                         hop2 = hops[i + 1]
@@ -919,11 +953,22 @@ class TopologyNode:
                         # Calculate RTT difference for this edge
                         rtt_diff = abs(hop2.rtt_ms - hop1.rtt_ms) if hop2.rtt_ms and hop1.rtt_ms else None
                         
-                        # Add edge with bandwidth (this is the max bandwidth for this tunnel)
-                        self.network_graph.add_edge(
+                        # Add edge to local graph with bandwidth
+                        self.local_graph.add_edge(
                             hop1.ip_address,
                             hop2.ip_address,
                             rtt_ms=rtt_diff,
+                            bandwidth_mbps=result.bandwidth_mbps
+                        )
+                        
+                        # Add to network graph only if both hops are public
+                        if not is_private_ip(hop1.ip_address) and not is_private_ip(hop2.ip_address):
+                            self.network_graph.add_node(hop1.ip_address, hop1.hostname)
+                            self.network_graph.add_node(hop2.ip_address, hop2.hostname)
+                            self.network_graph.add_edge(
+                                hop1.ip_address,
+                                hop2.ip_address,
+                                rtt_ms=rtt_diff,
                             bandwidth_mbps=result.download_mbps,
                             bandwidth_upload_mbps=result.upload_mbps
                         )
@@ -946,7 +991,7 @@ class TopologyNode:
                 await asyncio.sleep(300)
     
     async def _publish_topology(self):
-        """Generate GEXF and publish to IPFS."""
+        """Generate GEXF files and publish public topology to IPFS."""
         try:
             # Generate GEXF file
             output_dir = Path(__file__).parent.parent.parent / "output"
@@ -964,16 +1009,22 @@ class TopologyNode:
                 }, f, indent=2)
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            gexf_path = output_dir / f"topology_{self.node_id}_{timestamp}.gexf"
             
-            generator = GEXFGenerator(self.network_graph)
-            generator.save_to_file(str(gexf_path))
+            # Save LOCAL topology (includes private IPs) for web UI visualization
+            local_gexf_path = output_dir / "topology_latest.gexf"
+            local_generator = GEXFGenerator(self.local_graph)
+            local_generator.save_to_file(str(local_gexf_path))
+            logger.info(f"Saved local topology: {len(self.local_graph.nodes)} nodes (includes private IPs)")
             
-            logger.info(f"Generated GEXF: {gexf_path}")
+            # Save PUBLIC topology (public IPs only) for IPFS sharing
+            network_gexf_path = output_dir / f"topology_public_{timestamp}.gexf"
+            network_generator = GEXFGenerator(self.network_graph)
+            network_generator.save_to_file(str(network_gexf_path))
+            logger.info(f"Saved public topology: {len(self.network_graph.nodes)} nodes (public IPs only)")
             
-            # Publish to IPFS network (fully P2P, no central server)
+            # Publish PUBLIC topology to IPFS network (fully P2P, no central server)
             try:
-                cid = await self.ipfs_client.publish_topology(str(gexf_path))
+                cid = await self.ipfs_client.publish_topology(str(network_gexf_path))
                 
                 if cid:
                     logger.info(f"✓ Topology published to IPFS: {cid}")
