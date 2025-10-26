@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Intermap</Name>
+  <Repository>jaylouisw/intermap:latest</Repository>
+  <Registry>https://hub.docker.com/r/jaylouisw/intermap</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/Jaylouisw/Intermap/issues</Support>
+  <Project>https://github.com/Jaylouisw/Intermap</Project>
+  <Overview>Distributed P2P Internet Topology Mapper - Collaboratively map network infrastructure using IPFS. Performs traceroutes where each hop becomes a node and RTT becomes the edge weight, creating a visual network graph. Privacy-focused: only public IPs shared (RFC1918 private addresses automatically filtered).</Overview>
+  <Category>Network:Management Network:Other Tools:</Category>
+  <WebUI>http://[IP]:[PORT:5000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/Jaylouisw/Intermap/master/intermap.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/Jaylouisw/Intermap/master/.github/icon.png</Icon>
+  <ExtraParams>--cap-add=NET_ADMIN --cap-add=NET_RAW</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI Port" Target="5000" Default="5000" Mode="tcp" Description="Web interface and API port" Type="Port" Display="always" Required="true" Mask="false">5000</Config>
+  <Config Name="IPFS Swarm Port" Target="4001" Default="4001" Mode="tcp" Description="IPFS peer-to-peer communication port" Type="Port" Display="always" Required="true" Mask="false">4001</Config>
+  <Config Name="iperf3 Port" Target="5201" Default="5201" Mode="tcp" Description="Bandwidth testing server port" Type="Port" Display="always" Required="false" Mask="false">5201</Config>
+  <Config Name="IPFS Data" Target="/home/intermap/.ipfs" Default="/mnt/user/appdata/intermap/ipfs" Mode="rw" Description="IPFS data directory (peer identity, blocks, config)" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/intermap/ipfs</Config>
+  <Config Name="Topology Output" Target="/app/output" Default="/mnt/user/appdata/intermap/output" Mode="rw" Description="Generated topology GEXF files and node info" Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/intermap/output</Config>
+  <Config Name="Custom Config" Target="/app/config/default.yaml" Default="" Mode="ro" Description="Optional: Mount custom configuration file" Type="Path" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Update Interval" Target="NODE_UPDATE_INTERVAL" Default="300" Mode="" Description="Seconds between topology updates (default: 300)" Type="Variable" Display="advanced" Required="false" Mask="false">300</Config>
+  <Config Name="Target Subnet" Target="TARGET_SUBNET" Default="" Mode="" Description="Optional: Specific subnet to map (e.g., 8.8.8.0/28)" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Log Level" Target="LOG_LEVEL" Default="INFO" Mode="" Description="Logging verbosity: DEBUG, INFO, WARNING, ERROR" Type="Variable" Display="advanced" Required="false" Mask="false">INFO</Config>
+</Container>
