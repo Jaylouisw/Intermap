@@ -20,7 +20,7 @@ sleep 5
 # Start simple HTTP server for frontend in background
 echo "Starting web interface on port 8000..."
 cd /app/frontend/build
-python3 -m http.server 8000 &
+python3 -m http.server 8000 --bind 0.0.0.0 &
 WEB_PID=$!
 
 cd /app
@@ -30,9 +30,14 @@ cleanup() {
     echo "Stopping services..."
     kill $IPFS_PID 2>/dev/null || true
     kill $WEB_PID 2>/dev/null || true
+    kill $MAIN_PID 2>/dev/null || true
     exit 0
 }
 trap cleanup SIGTERM SIGINT
 
-# Execute main command
-exec "$@"
+# Start main application in background
+"$@" &
+MAIN_PID=$!
+
+# Wait for main process
+wait $MAIN_PID
