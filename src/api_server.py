@@ -24,14 +24,17 @@ from src.utils import is_public_ip
 
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend
-
 # Paths
 PROJECT_ROOT = Path(__file__).parent.parent
 OUTPUT_DIR = PROJECT_ROOT / "output"
 FRONTEND_BUILD = PROJECT_ROOT / "frontend" / "build"
 NODE_INFO_FILE = OUTPUT_DIR / "node_info.json"
+
+# Initialize Flask with static folder pointing to frontend build
+app = Flask(__name__, 
+            static_folder=str(FRONTEND_BUILD / "static"),
+            static_url_path='/static')
+CORS(app)  # Enable CORS for frontend
 
 # Store node's own external IP for highlighting in visualizer
 OWN_EXTERNAL_IP = None
