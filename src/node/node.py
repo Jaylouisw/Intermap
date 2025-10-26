@@ -870,11 +870,21 @@ class TopologyNode:
                         hops = self.tracer.trace(target_ip)
                         
                         if hops:
+                            # Add YOUR NODE as the source of the traceroute
+                            self.local_graph.add_node(self.external_ip, f"{self.external_ip} (YOU)")
+                            
                             # Add ALL hops to local graph (for user's own visualization)
                             for i, hop in enumerate(hops):
                                 self.local_graph.add_node(hop.ip_address, hop.hostname)
                                 
-                                if i > 0:
+                                if i == 0:
+                                    # Connect YOUR NODE to the first hop
+                                    self.local_graph.add_edge(
+                                        self.external_ip,
+                                        hop.ip_address,
+                                        rtt_ms=hop.rtt_ms
+                                    )
+                                elif i > 0:
                                     prev_hop = hops[i-1]
                                     rtt_diff = abs(hop.rtt_ms - prev_hop.rtt_ms)
                                     self.local_graph.add_edge(
@@ -882,6 +892,9 @@ class TopologyNode:
                                         hop.ip_address,
                                         rtt_ms=rtt_diff
                                     )
+                            
+                            # Add YOUR NODE to public graph too (as the scan origin)
+                            self.network_graph.add_node(self.external_ip, f"{self.external_ip} (YOU)")
                             
                             # Add ONLY public IPs to network graph (for IPFS sharing)
                             public_hops_discovered = []
@@ -891,8 +904,15 @@ class TopologyNode:
                                     self.network_graph.add_node(hop.ip_address, hop.hostname)
                                     public_hops_discovered.append(hop.ip_address)
                                     
-                                    # Connect to previous public hop
-                                    if i > 0:
+                                    # Connect to previous public hop (or YOUR NODE if first public hop)
+                                    if i == 0:
+                                        # First hop - connect to YOUR NODE
+                                        self.network_graph.add_edge(
+                                            self.external_ip,
+                                            hop.ip_address,
+                                            rtt_ms=hop.rtt_ms
+                                        )
+                                    else:
                                         # Find previous public hop
                                         for j in range(i-1, -1, -1):
                                             prev_hop = hops[j]
@@ -904,6 +924,13 @@ class TopologyNode:
                                                     rtt_ms=rtt_diff
                                                 )
                                                 break
+                                        else:
+                                            # No previous public hop found - connect to YOUR NODE
+                                            self.network_graph.add_edge(
+                                                self.external_ip,
+                                                hop.ip_address,
+                                                rtt_ms=hop.rtt_ms
+                                            )
                             
                             # Add discovered public IPs to trace_targets for future rounds
                             new_targets = []
