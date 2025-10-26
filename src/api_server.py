@@ -207,13 +207,46 @@ def trigger_traceroute():
                         # Import NetworkGraph here to avoid circular imports
                         from src.graph.gexf_generator import NetworkGraph, GEXFGenerator
                         
-                        # Create or load graph
+                        # Load existing topology and merge
+                        latest_file = OUTPUT_DIR / "topology_latest.gexf"
                         graph = NetworkGraph()
                         
-                        # TODO: Load existing topology and merge
-                        # For now, just create new topology from this trace
+                        if latest_file.exists():
+                            try:
+                                # Parse existing GEXF to preserve accumulated topology
+                                import xml.etree.ElementTree as ET
+                                tree = ET.parse(latest_file)
+                                root = tree.getroot()
+                                
+                                # Define namespace
+                                ns = {'gexf': 'http://gexf.net/1.3'}
+                                
+                                # Load existing nodes
+                                for node in root.findall('.//gexf:node', ns):
+                                    node_id = node.get('id')
+                                    label = node.get('label', node_id)
+                                    graph.add_node(node_id, hostname=label)
+                                
+                                # Load existing edges
+                                for edge in root.findall('.//gexf:edge', ns):
+                                    source = edge.get('source')
+                                    target_node = edge.get('target')
+                                    
+                                    # Get RTT from edge attributes
+                                    rtt_ms = None
+                                    for attvalue in edge.findall('.//gexf:attvalue[@for="0"]', ns):
+                                        try:
+                                            rtt_ms = float(attvalue.get('value'))
+                                        except (ValueError, TypeError):
+                                            pass
+                                    
+                                    graph.add_edge(source, target_node, rtt_ms=rtt_ms)
+                                
+                                logger.info(f"API: Loaded existing topology: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+                            except Exception as e:
+                                logger.warning(f"API: Could not load existing topology: {e}. Starting fresh.")
                         
-                        # Add nodes and edges from hops
+                        # Add NEW traceroute hops to the existing graph
                         for hop in hops:
                             graph.add_node(hop.ip_address, hostname=hop.hostname)
                         
@@ -221,20 +254,19 @@ def trigger_traceroute():
                             graph.add_edge(
                                 hops[i].ip_address,
                                 hops[i+1].ip_address,
-                                rtt_ms=hops[i+1].rtt_ms
+                                rtt_ms=abs(hops[i+1].rtt_ms - hops[i].rtt_ms)
                             )
                         
-                        # Generate GEXF file
+                        logger.info(f"API: Merged topology now has {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+                        
+                        # Generate timestamped backup
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         output_file = OUTPUT_DIR / f"topology_{timestamp}.gexf"
                         
                         generator = GEXFGenerator(graph)
-                        generator.generate(str(output_file), title=f"Traceroute to {target}")
+                        generator.generate(str(output_file), title="Accumulated Internet Topology")
                         
-                        # Also update topology_latest.gexf symlink/copy
-                        latest_file = OUTPUT_DIR / "topology_latest.gexf"
-                        if latest_file.exists():
-                            latest_file.unlink()
+                        # Update topology_latest.gexf with merged data
                         import shutil
                         shutil.copy(output_file, latest_file)
                         
