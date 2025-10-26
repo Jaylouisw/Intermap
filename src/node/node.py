@@ -1117,13 +1117,13 @@ class TopologyNode:
             # Save LOCAL topology (includes private IPs) for web UI visualization
             local_gexf_path = output_dir / "topology_latest.gexf"
             local_generator = GEXFGenerator(self.local_graph)
-            local_generator.save_to_file(str(local_gexf_path))
+            local_generator.generate(str(local_gexf_path), "Local Internet Topology (includes private IPs)")
             logger.info(f"Saved local topology: {len(self.local_graph.nodes)} nodes (includes private IPs)")
             
             # Save PUBLIC topology (public IPs only) for IPFS sharing
             network_gexf_path = output_dir / f"topology_public_{timestamp}.gexf"
             network_generator = GEXFGenerator(self.network_graph)
-            network_generator.save_to_file(str(network_gexf_path))
+            network_generator.generate(str(network_gexf_path), "Public Internet Topology (public IPs only)")
             logger.info(f"Saved public topology: {len(self.network_graph.nodes)} nodes (public IPs only)")
             
             # Publish PUBLIC topology to IPFS network (fully P2P, no central server)
