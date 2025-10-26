@@ -36,7 +36,8 @@ function App() {
   const loadNodeInfo = async () => {
     try {
       // Get own node's IP for highlighting
-      const response = await fetch('http://localhost:5000/api/node/info');
+      // Use relative URL to work with Railway and other deployments
+      const response = await fetch('/api/node/info');
       if (response.ok) {
         const info = await response.json();
         setOwnNodeIp(info.external_ip);
@@ -52,8 +53,8 @@ function App() {
       setLoading(true);
       setError(null);
       
-      // Try to load from API server
-      const response = await fetch('http://localhost:5000/api/topology/latest');
+      // Try to load from API server (use relative URL)
+      const response = await fetch('/api/topology/latest');
       
       if (!response.ok) {
         // If no data yet, show message
@@ -111,7 +112,7 @@ function App() {
 
   const handleExport = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/topology/latest');
+      const response = await fetch('/api/topology/latest');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -133,7 +134,7 @@ function App() {
 
     setTracing(true);
     try {
-      const response = await fetch('http://localhost:5000/api/trace', {
+      const response = await fetch('/api/trace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

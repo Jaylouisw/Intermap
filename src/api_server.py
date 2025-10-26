@@ -263,8 +263,12 @@ def trigger_traceroute():
 def serve_frontend(path):
     """Serve React frontend."""
     if FRONTEND_BUILD.exists():
+        # For root path or empty path, serve index.html
+        if not path:
+            return send_from_directory(FRONTEND_BUILD, 'index.html')
+        
         # Check if the requested file exists
-        file_path = FRONTEND_BUILD / path if path else FRONTEND_BUILD / 'index.html'
+        file_path = FRONTEND_BUILD / path
         
         if file_path.exists() and file_path.is_file():
             # Serve the specific file
@@ -296,11 +300,15 @@ def run_server(host='0.0.0.0', port=5000):
 
 
 if __name__ == "__main__":
+    import os
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     logger.info("Starting API server as standalone module")
-    run_server()
-    run_server()
-    logger.info("run_server() returned")
+    
+    # Use PORT environment variable if set (for Railway/Heroku), otherwise default to 5000
+    port = int(os.getenv('PORT', 5000))
+    logger.info(f"Using port: {port}")
+    run_server(port=port)
+

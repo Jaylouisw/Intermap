@@ -17,16 +17,11 @@ IPFS_PID=$!
 # Wait for IPFS to be ready
 sleep 5
 
-# Start simple HTTP server for frontend in background
-echo "Starting web interface on port 8000..."
-cd /app/frontend/build
-python3 -m http.server 8000 --bind 0.0.0.0 &
-WEB_PID=$!
-
 cd /app
 
-# Start API server in background
-echo "Starting API server on port 5000..."
+# Start API server (which also serves the frontend)
+# Uses PORT env var if set (Railway/Heroku), otherwise defaults to 5000
+echo "Starting API server (serves both API and frontend)..."
 python3 -m src.api_server &
 API_PID=$!
 
@@ -34,7 +29,6 @@ API_PID=$!
 cleanup() {
     echo "Stopping services..."
     kill $IPFS_PID 2>/dev/null || true
-    kill $WEB_PID 2>/dev/null || true
     kill $API_PID 2>/dev/null || true
     kill $MAIN_PID 2>/dev/null || true
     exit 0
