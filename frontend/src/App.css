@@ -179,6 +179,75 @@
   background-color: #00bb66;
 }
 
+/* Zenmap-style network distance legend */
+.network-legend {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: rgba(45, 45, 45, 0.95);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #00ff88;
+  z-index: 100;
+  min-width: 200px;
+}
+
+.network-legend h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: #00ff88;
+  text-align: center;
+  border-bottom: 1px solid #444;
+  padding-bottom: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  color: #ffffff;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.own-node-info {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background-color: rgba(0, 255, 0, 0.15);
+  border: 2px solid #00ff00;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  color: #00ff00;
+  font-weight: bold;
+  font-size: 0.9rem;
+  z-index: 100;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  animation: pulse-green 2s infinite;
+}
+
+.own-node-info strong {
+  color: #ffffff;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+  }
+}
+
 .loading {
   display: flex;
   justify-content: center;

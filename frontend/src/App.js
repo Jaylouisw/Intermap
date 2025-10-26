@@ -232,11 +232,33 @@ function App() {
       </header>
       <div className="graph-container">
         <NetworkGraph data={graphData} ownNodeIp={ownNodeIp} />
+        
+        {/* Zenmap-style network distance legend */}
+        <div className="network-legend">
+          <h4>Network Distance (Zenmap Style)</h4>
+          <div className="legend-item">
+            <span className="legend-color" style={{backgroundColor: '#00ff00'}}></span>
+            <span>Your Node (Center)</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{backgroundColor: '#ffff00'}}></span>
+            <span>1 Hop Away</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{backgroundColor: '#ff8800'}}></span>
+            <span>2 Hops Away</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color" style={{backgroundColor: '#ff4444'}}></span>
+            <span>3+ Hops Away</span>
+          </div>
+        </div>
+        
         <BandwidthLegend />
         
         {ownNodeIp && (
           <div className="own-node-info">
-            ⭐ Your node: <strong>{ownNodeIp}</strong> (highlighted in magenta)
+            ⭐ Your node: <strong>{ownNodeIp}</strong> (green star at center)
           </div>
         )}
         

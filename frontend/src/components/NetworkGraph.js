@@ -33,24 +33,91 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
   useEffect(() => {
     if (!data || !containerRef.current) return;
 
-    // Prepare data for vis.js
+    // Calculate network hierarchy (distance from your node) - Zenmap style
+    const calculateHierarchy = () => {
+      const distances = {};
+      const visited = new Set();
+      const queue = [];
+      
+      // Find your node or use first node as center
+      const centerNode = ownNodeIp || data.nodes[0]?.id;
+      
+      if (!centerNode) return distances;
+      
+      // BFS to calculate distances
+      distances[centerNode] = 0;
+      queue.push(centerNode);
+      visited.add(centerNode);
+      
+      while (queue.length > 0) {
+        const current = queue.shift();
+        const currentDist = distances[current];
+        
+        // Find all connected nodes
+        data.edges.forEach(edge => {
+          let neighbor = null;
+          if (edge.from === current && !visited.has(edge.to)) {
+            neighbor = edge.to;
+          } else if (edge.to === current && !visited.has(edge.from)) {
+            neighbor = edge.from;
+          }
+          
+          if (neighbor) {
+            distances[neighbor] = currentDist + 1;
+            visited.add(neighbor);
+            queue.push(neighbor);
+          }
+        });
+      }
+      
+      return distances;
+    };
+    
+    const hierarchy = calculateHierarchy();
+    const maxLevel = Math.max(...Object.values(hierarchy), 0);
+    
+    // Prepare data for vis.js with Zenmap-style radial layout
     const nodes = data.nodes.map(node => {
-      // Highlight user's own node in bright purple/magenta
       const isOwnNode = ownNodeIp && node.id === ownNodeIp;
+      const level = hierarchy[node.id] || maxLevel + 1;
+      
+      // Color nodes based on network distance (Zenmap style)
+      let nodeColor = '#4488ff'; // Default blue
+      if (isOwnNode) {
+        nodeColor = '#00ff00'; // Green for your node (Zenmap center)
+      } else if (level === 1) {
+        nodeColor = '#ffff00'; // Yellow for direct neighbors
+      } else if (level === 2) {
+        nodeColor = '#ff8800'; // Orange for 2 hops away
+      } else if (level >= 3) {
+        nodeColor = '#ff4444'; // Red for distant nodes
+      }
       
       return {
         id: node.id,
-        label: isOwnNode ? `⭐ ${node.label} (YOU)` : node.label,
-        color: isOwnNode ? '#ff00ff' : (node.color || '#4488ff'), // Magenta for own node
-        shape: 'dot',
-        size: isOwnNode ? 30 : (node.type === 'participant' ? 20 : 15), // Larger for own node
+        label: isOwnNode ? `${node.label}\n(YOU)` : node.label,
+        color: {
+          background: nodeColor,
+          border: isOwnNode ? '#00ff00' : '#ffffff',
+          highlight: {
+            background: nodeColor,
+            border: '#00ffff',
+          },
+        },
+        shape: isOwnNode ? 'star' : 'dot', // Star for your node like Zenmap
+        size: isOwnNode ? 35 : Math.max(25 - (level * 3), 15), // Larger = closer
         borderWidth: isOwnNode ? 4 : 2,
-        font: isOwnNode ? { color: '#ffffff', size: 14, bold: true } : { color: '#ffffff', size: 12 },
+        font: { 
+          color: '#ffffff', 
+          size: isOwnNode ? 14 : 12,
+          bold: isOwnNode,
+        },
+        level: level, // Used for hierarchical layout
+        title: `${node.label}\nDistance: ${level} hop${level !== 1 ? 's' : ''}`,
       };
     });
 
     const edges = data.edges.map((edge, index) => {
-      // Color edge based on bandwidth
       const bandwidth = edge.bandwidth_mbps;
       const color = getBandwidthColor(bandwidth);
       const width = bandwidth ? Math.min(Math.log10(bandwidth) + 1, 10) : 2;
@@ -59,16 +126,36 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
         id: index,
         from: edge.from,
         to: edge.to,
-        color: { color: color },
+        color: { 
+          color: color,
+          opacity: 0.6,
+        },
         width: width,
+        smooth: {
+          type: 'curvedCW',
+          roundness: 0.2,
+        },
         title: bandwidth 
           ? `Bandwidth: ${bandwidth.toFixed(2)} Mbps\nLatency: ${edge.rtt_ms?.toFixed(2) || 'N/A'} ms`
           : `Latency: ${edge.rtt_ms?.toFixed(2) || 'N/A'} ms`,
       };
     });
 
-    // Network options
+    // Zenmap-style hierarchical radial layout options
     const options = {
+      layout: {
+        hierarchical: {
+          enabled: true,
+          levelSeparation: 200,
+          nodeSpacing: 150,
+          treeSpacing: 200,
+          blockShifting: true,
+          edgeMinimization: true,
+          parentCentralization: true,
+          direction: 'UD', // Up-Down (your node at top)
+          sortMethod: 'directed',
+        },
+      },
       nodes: {
         font: {
           color: '#ffffff',
@@ -76,33 +163,43 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
         },
         borderWidth: 2,
         borderWidthSelected: 4,
+        shadow: {
+          enabled: true,
+          color: 'rgba(0,0,0,0.5)',
+          size: 10,
+          x: 5,
+          y: 5,
+        },
       },
       edges: {
         smooth: {
-          type: 'continuous',
+          enabled: true,
+          type: 'cubicBezier',
+          roundness: 0.5,
         },
         arrows: {
-          to: false,
+          to: {
+            enabled: false,
+          },
+        },
+        shadow: {
+          enabled: true,
+          color: 'rgba(0,0,0,0.3)',
+          size: 5,
+          x: 3,
+          y: 3,
         },
       },
       physics: {
-        enabled: true,
-        barnesHut: {
-          gravitationalConstant: -2000,
-          centralGravity: 0.3,
-          springLength: 200,
-          springConstant: 0.04,
-          damping: 0.09,
-        },
-        stabilization: {
-          iterations: 200,
-        },
+        enabled: false, // Disable physics for stable hierarchical layout
       },
       interaction: {
         hover: true,
         tooltipDelay: 100,
         navigationButtons: true,
         keyboard: true,
+        zoomView: true,
+        dragView: true,
       },
     };
 
