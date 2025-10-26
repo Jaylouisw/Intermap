@@ -88,6 +88,8 @@ class Traceroute:
         if not SCAPY_AVAILABLE:
             return []
             
+        import time
+        
         hops = []
         logger.debug(f"Starting ICMP traceroute to {target} (max {self.max_hops} hops)")
         
@@ -95,7 +97,10 @@ class Traceroute:
             try:
                 # Send ICMP echo request with specific TTL
                 pkt = IP(dst=target, ttl=ttl) / ICMP()
+                
+                start_time = time.time()
                 reply = sr1(pkt, timeout=self.timeout, verbose=0)
+                rtt_ms = (time.time() - start_time) * 1000
                 
                 if reply is None:
                     # No response - hop timeout
@@ -103,14 +108,7 @@ class Traceroute:
                     continue
                 
                 hop_ip = reply.src
-                
-                # Try to get hostname (quick lookup, no reverse DNS delay)
                 hostname = None
-                
-                # Calculate RTT (crude estimate from scapy timing)
-                rtt_ms = 0.0
-                if hasattr(reply, 'time') and hasattr(pkt, 'sent_time'):
-                    rtt_ms = (reply.time - pkt.sent_time) * 1000
                 
                 hops.append(Hop(
                     hop_number=ttl,
@@ -149,6 +147,8 @@ class Traceroute:
         if not SCAPY_AVAILABLE:
             return []
             
+        import time
+        
         hops = []
         logger.debug(f"Starting TCP SYN traceroute to {target}:{dport} (max {self.max_hops} hops)")
         
@@ -156,7 +156,10 @@ class Traceroute:
             try:
                 # Send TCP SYN packet with specific TTL
                 pkt = IP(dst=target, ttl=ttl) / TCP(dport=dport, flags="S")
+                
+                start_time = time.time()
                 reply = sr1(pkt, timeout=self.timeout, verbose=0)
+                rtt_ms = (time.time() - start_time) * 1000
                 
                 if reply is None:
                     # No response - hop timeout
@@ -164,14 +167,7 @@ class Traceroute:
                     continue
                 
                 hop_ip = reply.src
-                
-                # Try to get hostname (quick lookup, no reverse DNS delay)
                 hostname = None
-                
-                # Calculate RTT
-                rtt_ms = 0.0
-                if hasattr(reply, 'time') and hasattr(pkt, 'sent_time'):
-                    rtt_ms = (reply.time - pkt.sent_time) * 1000
                 
                 hops.append(Hop(
                     hop_number=ttl,
