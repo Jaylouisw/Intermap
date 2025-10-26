@@ -1,0 +1,25 @@
+name: Update Docker Hub Description
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'README.md'
+      - '.github/workflows/update-dockerhub-description.yml'
+
+jobs:
+  update-description:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update Docker Hub Description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: jaylouisw/intermap
+          short-description: 'Distributed P2P Internet Topology Mapper - Collaboratively map network infrastructure with IPFS'
+          readme-filepath: ./README.md
