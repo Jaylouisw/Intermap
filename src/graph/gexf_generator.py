@@ -162,10 +162,16 @@ class GEXFGenerator:
     Includes color coding based on bandwidth measurements.
     """
     
-    # Bandwidth categories and colors (RGB hex)
+    # Bandwidth categories and colors (RGB hex) for modern multi-gigabit networking
     BANDWIDTH_COLORS = {
-        "gigabit": "00ff00",      # Green: >= 1000 Mbps
-        "fast": "88ff00",          # Yellow-green: >= 100 Mbps
+        "100gig": "00ffff",        # Cyan: >= 100 Gbps (datacenter)
+        "40gig": "00ccff",         # Bright blue: >= 40 Gbps
+        "25gig": "0099ff",         # Blue: >= 25 Gbps
+        "10gig": "0066ff",         # Dark blue: >= 10 Gbps
+        "5gig": "00ff00",          # Green: >= 5 Gbps
+        "2.5gig": "66ff00",        # Lime green: >= 2.5 Gbps
+        "gigabit": "aaff00",       # Yellow-green: >= 1 Gbps
+        "fast": "ffdd00",          # Yellow: >= 100 Mbps
         "medium": "ffaa00",        # Orange: >= 10 Mbps
         "slow": "ff4400",          # Red-orange: >= 1 Mbps
         "very_slow": "ff0000",     # Red: < 1 Mbps
@@ -193,7 +199,19 @@ class GEXFGenerator:
         """
         if bandwidth_mbps is None:
             return ("unknown", self.BANDWIDTH_COLORS["unknown"])
-        elif bandwidth_mbps >= 1000:
+        elif bandwidth_mbps >= 100000:  # >= 100 Gbps
+            return ("100gig", self.BANDWIDTH_COLORS["100gig"])
+        elif bandwidth_mbps >= 40000:   # >= 40 Gbps
+            return ("40gig", self.BANDWIDTH_COLORS["40gig"])
+        elif bandwidth_mbps >= 25000:   # >= 25 Gbps
+            return ("25gig", self.BANDWIDTH_COLORS["25gig"])
+        elif bandwidth_mbps >= 10000:   # >= 10 Gbps
+            return ("10gig", self.BANDWIDTH_COLORS["10gig"])
+        elif bandwidth_mbps >= 5000:    # >= 5 Gbps
+            return ("5gig", self.BANDWIDTH_COLORS["5gig"])
+        elif bandwidth_mbps >= 2500:    # >= 2.5 Gbps
+            return ("2.5gig", self.BANDWIDTH_COLORS["2.5gig"])
+        elif bandwidth_mbps >= 1000:    # >= 1 Gbps
             return ("gigabit", self.BANDWIDTH_COLORS["gigabit"])
         elif bandwidth_mbps >= 100:
             return ("fast", self.BANDWIDTH_COLORS["fast"])
