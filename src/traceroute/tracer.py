@@ -436,6 +436,12 @@ def detect_local_subnet() -> Optional[str]:
         local_ip = s.getsockname()[0]
         s.close()
         
+        # Skip Docker bridge networks (172.16.0.0/12, 172.17.0.0/16, etc.)
+        # These are internal container networks, not useful for topology mapping
+        if local_ip.startswith('172.17.') or local_ip.startswith('172.18.'):
+            logger.warning(f"Detected Docker bridge network IP ({local_ip}), skipping subnet scan")
+            return None
+        
         # Use ip or ifconfig to get subnet mask
         if platform.system() == "Windows":
             # Windows: Use ipconfig
