@@ -32,7 +32,12 @@ Intermap is a **fully decentralized network mapping system** where participants 
 
 - **Smart Subnet Scanning**: Automatically detects and maps your public subnet with parallel ping sweeps (50 concurrent workers)
 - **Live Host Detection**: Only maps responsive IPs - no time wasted on dead hosts
-- **Comprehensive Traceroutes**: Every hop recorded with millisecond-precision RTT measurements
+- **Universal Traceroute**: Automatic ICMP with TCP SYN fallback - works on **all platforms**
+  - ✅ **ICMP traceroute** on Linux/WSL2/macOS (preferred, most accurate)
+  - ✅ **TCP SYN fallback** on Windows Docker Desktop (automatic when ICMP blocked)
+  - 🔄 **Zero configuration** - automatically selects best method for your platform
+- **Comprehensive Route Mapping**: Every hop recorded with millisecond-precision RTT measurements
+- **150+ iperf3 Targets**: Dynamic fetching of global iperf3 servers for worldwide coverage
 - **Well-Known Targets**: Pre-configured to map to DNS servers, root nameservers, and major CDNs
 
 ### ⚡ Multi-Gigabit Bandwidth Testing
@@ -314,16 +319,27 @@ If still no data after 15 minutes, restart the container.
 
 Normal during subnet scanning and traceroute operations. CPU usage drops after initial discovery phase (15-30 minutes).
 
-### Docker Desktop (Windows/Mac) Limitations
+### Windows Docker Desktop: ICMP Traceroute Limitation
 
-Docker Desktop uses a VM that doesn't fully support raw sockets. For full functionality:
-- Use **Linux** with Docker Engine
-- Deploy to a **Linux VPS/cloud server**
-- Use **Unraid** (native Docker, full hardware access)
+**Intermap now automatically handles this with TCP SYN fallback!**
+
+Windows Docker Desktop's Hyper-V virtualization blocks raw ICMP packets, preventing standard ICMP traceroute from discovering hops. **Intermap v2.0+ automatically detects this and falls back to TCP SYN traceroute**, which works on all platforms.
+
+**What this means:**
+- ✅ **TCP SYN traceroute works on Windows Docker Desktop** (automatic fallback)
+- ✅ **ICMP traceroute works on Linux/WSL2/macOS** (preferred method, best results)
+- ✅ **No configuration needed** - Intermap chooses the best method automatically
+
+**For optimal results on Windows:**
+- **Recommended**: Use **WSL2 with native Docker** (full ICMP support) - see [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md)
+- **Alternative**: Accept TCP SYN fallback (works but slightly less accurate than ICMP)
+- **Cloud**: Deploy to **Linux VPS** or **Unraid** server (best performance)
+
+📖 **See [WINDOWS_DEVELOPMENT.md](WINDOWS_DEVELOPMENT.md)** for complete Windows setup instructions, WSL2 configuration, and troubleshooting guide.
 
 ---
 
-## �📜 License
+## � License
 
 **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**
 
