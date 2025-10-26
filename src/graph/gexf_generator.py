@@ -295,7 +295,12 @@ class GEXFGenerator:
             # Determine speed category and color based on bandwidth
             speed_category, color = self._categorize_bandwidth(bandwidth_mbps)
             
-            # Set weight (use bandwidth if available, otherwise RTT)
+            # Set edge LENGTH based on RTT (lower RTT = shorter edge for better visualization)
+            # Use RTT as length directly - visualization tools will interpret this
+            if rtt_ms is not None:
+                edge.set("length", str(rtt_ms))
+            
+            # Set weight (use bandwidth if available, otherwise inverse RTT)
             if bandwidth_mbps is not None:
                 edge.set("weight", str(bandwidth_mbps))
             elif rtt_ms is not None:

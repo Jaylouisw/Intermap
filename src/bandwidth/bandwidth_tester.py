@@ -293,19 +293,29 @@ class BandwidthTestManager:
         logger.info(f"Found {len(available)}/{len(targets)} targets with iperf3 servers")
         return available
     
-    def test_target(self, target: str, port: int = 5201) -> Optional[BandwidthResult]:
+    def test_target(self, target: str, port: int = 5201, tracer=None) -> tuple[Optional[BandwidthResult], List]:
         """
         Test bandwidth to a single target (sequential, one at a time).
         Updates peak results automatically.
+        Optionally traceroutes to target first to get full path.
         
         Args:
             target: IP address or hostname
             port: iperf3 port
+            tracer: Optional Traceroute instance to get path before testing
             
         Returns:
-            BandwidthResult if successful, None otherwise
+            Tuple of (BandwidthResult if successful, List of hops in path)
         """
         logger.info(f"[Test {self.test_count + 1}] Testing {target}:{port}")
+        
+        # Get traceroute path if tracer provided
+        hops = []
+        if tracer:
+            logger.info(f"Tracerouting to {target} before bandwidth test...")
+            hops = tracer.trace(target)
+            if hops:
+                logger.info(f"Path to {target}: {len(hops)} hops")
         
         # Run test
         result = self.client.test_bandwidth(target, port)
@@ -332,9 +342,9 @@ class BandwidthTestManager:
                 else:
                     logger.info(f"Not a peak for {target}: {result.download_mbps:.2f} Mbps (peak: {prev_peak.download_mbps:.2f})")
         
-        return result
+        return result, hops
     
-    def test_all_targets(self, targets: List[str], port: int = 5201, probe_first: bool = True) -> List[BandwidthResult]:
+    def test_all_targets(self, targets: List[str], port: int = 5201, probe_first: bool = True, tracer=None) -> List[Tuple[BandwidthResult, List]]:
         """
         Test bandwidth to all targets sequentially.
         
@@ -342,9 +352,10 @@ class BandwidthTestManager:
             targets: List of IP addresses or hostnames
             port: iperf3 port
             probe_first: If True, probe targets before testing
+            tracer: Optional Traceroute instance to get paths
             
         Returns:
-            List of BandwidthResult objects (successful tests only)
+            List of tuples (BandwidthResult, hops_list) for successful tests
         """
         if probe_first:
             # Filter to only targets with iperf3 servers
@@ -359,10 +370,10 @@ class BandwidthTestManager:
         
         for i, target in enumerate(targets, 1):
             logger.info(f"Progress: {i}/{len(targets)}")
-            result = self.test_target(target, port)
+            result, hops = self.test_target(target, port, tracer)
             
             if result:
-                results.append(result)
+                results.append((result, hops))
             
             # Brief pause between tests to avoid congestion
             if i < len(targets):

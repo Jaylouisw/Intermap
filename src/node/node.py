@@ -243,6 +243,7 @@ class TopologyNode:
             self.tasks.append(asyncio.create_task(self._traceroute_loop()))
             self.tasks.append(asyncio.create_task(self._peer_cleanup_loop()))
             self.tasks.append(asyncio.create_task(self._ip_verification_loop()))
+            self.tasks.append(asyncio.create_task(self._map_verification_loop()))  # New: verify all IPs in map
             
             if self.config.get("bandwidth", {}).get("enabled", True):
                 self.tasks.append(asyncio.create_task(self._bandwidth_test_loop()))
@@ -292,12 +293,16 @@ class TopologyNode:
             live_hosts = get_live_subnet_hosts(max_hosts=254)
             
             if live_hosts:
-                # Add live hosts to trace targets
+                # Add live hosts to trace targets AND to the graph
+                # ANY IP that responds to ping goes in the map
                 for ip in live_hosts:
+                    # Add to graph immediately (responsive IP)
+                    self.network_graph.add_node(ip, hostname=ip)
+                    
                     if ip != self.external_ip:  # Don't trace to self
                         self.trace_targets.add(ip)
                 
-                logger.info(f"✅ Added {len(live_hosts)} live hosts from local subnet to trace targets")
+                logger.info(f"✅ Added {len(live_hosts)} live hosts from local subnet to map and trace targets")
             else:
                 logger.warning("No live hosts found in local subnet")
             
@@ -612,6 +617,100 @@ class TopologyNode:
                 logger.error(f"Error in IP verification loop: {e}")
                 await asyncio.sleep(60)
 
+    async def _map_verification_loop(self):
+        """
+        Continuously verify ALL IPs in the map are still online.
+        Ping every IP periodically and request cross-node verification if down.
+        """
+        while self.running:
+            try:
+                await asyncio.sleep(300)  # Check every 5 minutes
+                
+                # Get all IPs currently in the map
+                all_ips = list(self.network_graph.nodes.keys())
+                
+                if not all_ips:
+                    logger.debug("No IPs in map yet")
+                    continue
+                
+                logger.info(f"Verifying {len(all_ips)} IPs in map...")
+                
+                # Ping all IPs to verify they're still online
+                import platform
+                import subprocess
+                
+                online_count = 0
+                offline_count = 0
+                
+                for ip in all_ips:
+                    try:
+                        # Quick ping test
+                        if platform.system() == "Windows":
+                            cmd = ["ping", "-n", "1", "-w", "1000", ip]
+                        else:
+                            cmd = ["ping", "-c", "1", "-W", "1", ip]
+                        
+                        result = subprocess.run(
+                            cmd,
+                            capture_output=True,
+                            timeout=2
+                        )
+                        
+                        if result.returncode == 0:
+                            # Still online
+                            online_count += 1
+                            
+                            # Update reachability
+                            if ip in self.ip_reachability:
+                                self.ip_reachability[ip].reachable_by.add(self.node_id)
+                                self.ip_reachability[ip].unreachable_by.discard(self.node_id)
+                                self.ip_reachability[ip].last_verified = datetime.now()
+                            else:
+                                self.ip_reachability[ip] = IPReachability(
+                                    ip=ip,
+                                    reachable_by={self.node_id},
+                                    unreachable_by=set(),
+                                    last_verified=datetime.now()
+                                )
+                        else:
+                            # Appears offline - request verification from other nodes
+                            offline_count += 1
+                            logger.warning(f"IP {ip} appears offline - requesting verification")
+                            
+                            # Update reachability
+                            if ip in self.ip_reachability:
+                                self.ip_reachability[ip].unreachable_by.add(self.node_id)
+                                self.ip_reachability[ip].reachable_by.discard(self.node_id)
+                                self.ip_reachability[ip].last_verified = datetime.now()
+                                self.ip_reachability[ip].verification_pending = True
+                            else:
+                                self.ip_reachability[ip] = IPReachability(
+                                    ip=ip,
+                                    reachable_by=set(),
+                                    unreachable_by={self.node_id},
+                                    last_verified=datetime.now()
+                                )
+                                self.ip_reachability[ip].verification_pending = True
+                            
+                            # Request verification from other nodes
+                            verification_msg = {
+                                "type": "verification_request",
+                                "ip": ip,
+                                "requesting_node": self.node_id,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                            await self.ipfs_client.publish(IPFSClient.VERIFICATION_CHANNEL, verification_msg)
+                    
+                    except Exception as e:
+                        logger.debug(f"Error verifying {ip}: {e}")
+                
+                logger.info(f"Map verification complete: {online_count} online, {offline_count} offline")
+                
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in map verification loop: {e}")
+                await asyncio.sleep(300)
     
     async def _peer_cleanup_loop(self):
         """Remove stale peers that haven't sent heartbeat."""
@@ -787,31 +886,44 @@ class TopologyNode:
                 
                 logger.info(f"Found {len(testable_ips)} IPs with iperf3 servers")
                 
-                # Test all targets sequentially
+                # Test all targets sequentially with traceroute paths
                 logger.info(f"Starting sequential bandwidth tests to {len(testable_ips)} targets...")
+                logger.info("Each test will traceroute first to get full path...")
                 results = self.bandwidth_manager.test_all_targets(
                     testable_ips,
                     port=5201,
-                    probe_first=False  # Already probed
+                    probe_first=False,  # Already probed
+                    tracer=self.tracer  # Pass tracer to get paths
                 )
                 
                 logger.info(f"Completed {len(results)} bandwidth tests")
                 
-                # Update graph with bandwidth results (using peak values)
-                for result in self.bandwidth_manager.get_peak_results():
-                    # Add or update edge with bandwidth data
-                    # Since we don't have path info, just update any edge involving this IP
-                    for edge_key in list(self.network_graph.edges.keys()):
-                        if result.target in edge_key:
-                            # Update edge with peak bandwidth
-                            self.network_graph.add_edge(
-                                edge_key[0],
-                                edge_key[1],
-                                rtt_ms=self.network_graph.edges[edge_key].get("rtt_ms"),
-                                bandwidth_mbps=result.download_mbps,
-                                bandwidth_upload_mbps=result.upload_mbps
-                            )
-                            logger.debug(f"Updated edge {edge_key} with bandwidth: ↓{result.download_mbps:.2f} ↑{result.upload_mbps:.2f} Mbps")
+                # Update graph with bandwidth results
+                # Apply bandwidth to ALL edges in the traceroute path (tunnel bandwidth)
+                for result, hops in results:
+                    logger.info(f"Applying bandwidth to path for {result.target}: {len(hops)} hops")
+                    
+                    # Add all hops to graph (ANY IP in traceroute goes in the map)
+                    for hop in hops:
+                        self.network_graph.add_node(hop.ip_address, hop.hostname)
+                    
+                    # Apply bandwidth to ALL edges in the path
+                    for i in range(len(hops) - 1):
+                        hop1 = hops[i]
+                        hop2 = hops[i + 1]
+                        
+                        # Calculate RTT difference for this edge
+                        rtt_diff = abs(hop2.rtt_ms - hop1.rtt_ms) if hop2.rtt_ms and hop1.rtt_ms else None
+                        
+                        # Add edge with bandwidth (this is the max bandwidth for this tunnel)
+                        self.network_graph.add_edge(
+                            hop1.ip_address,
+                            hop2.ip_address,
+                            rtt_ms=rtt_diff,
+                            bandwidth_mbps=result.download_mbps,
+                            bandwidth_upload_mbps=result.upload_mbps
+                        )
+                        logger.debug(f"Applied tunnel bandwidth to edge {hop1.ip_address} <-> {hop2.ip_address}: {result.download_mbps:.2f} Mbps")
                 
                 # Publish updated topology with bandwidth data
                 await self._publish_topology()
