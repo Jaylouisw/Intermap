@@ -1,6 +1,8 @@
 # 🚀 Deployment Guide
 
-This guide covers deploying Intermap to various platforms, from local development to production cloud hosting.
+This guide is for **maintainers** setting up the CI/CD pipeline and development environments. 
+
+**End users**: See [QUICKSTART.md](QUICKSTART.md) to run a node on your own hardware.
 
 ---
 
@@ -151,11 +153,13 @@ python src/main.py
 
 ---
 
-## ☁️ Cloud Platform Deployment
+## ☁️ Cloud Platform Testing (Maintainer Use Only)
+
+**Note**: The following cloud deployment instructions are for maintainer testing purposes only. End users should run nodes on their own hardware for best network mapping accuracy.
 
 ### 🚂 Railway
 
-**Railway** is one of the easiest platforms for deploying Docker containers with generous free tier.
+**Railway** can be used for testing the Docker build and deployment process.
 
 **Free Tier:**
 - $5/month in credits
@@ -213,7 +217,7 @@ python src/main.py
 
 ### 🎨 Render
 
-**Render** provides free Docker hosting with excellent support for web services.
+**Render** can be used for testing Docker deployment workflows.
 
 **Free Tier:**
 - 750 hours/month
@@ -264,7 +268,7 @@ python src/main.py
 
 ### ✈️ Fly.io
 
-**Fly.io** offers true global edge deployment with excellent Docker support.
+**Fly.io** can be used for testing edge deployment.
 
 **Free Tier:**
 - 3 shared-cpu VMs with 256MB RAM
@@ -367,7 +371,7 @@ python src/main.py
 
 ### 🌀 Heroku
 
-**Heroku** classic PaaS platform with container support.
+**Heroku** can be used for testing classic PaaS deployment.
 
 **Free Tier:** Deprecated (only paid plans)
 

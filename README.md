@@ -241,23 +241,14 @@ docker pull jaylouisw/intermap:latest
 
 Images are built automatically on every push to master via GitHub Actions.
 
-### Free Tier Hosting
+### Running Your Own Node
 
-Deploy Intermap to free cloud platforms:
+**Best results on personal hardware:**
+- Home server or desktop PC (Linux recommended)
+- Raspberry Pi 4 or similar SBC
+- Any system with Docker installed
 
-- **Railway**: [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=...)
-- **Render**: One-click deploy from dashboard
-- **Fly.io**: Global edge deployment
-- **Heroku**: Classic PaaS option
-
-**See [DEPLOY.md](DEPLOY.md) for detailed instructions.**
-
-### Requirements
-
-- **Minimum**: 512 MB RAM, 1 vCPU
-- **Recommended**: 1 GB RAM, 2 vCPU
-- **Network**: Port 8000 (web), 4001 (IPFS), 5201 (iperf3)
-- **Capabilities**: NET_ADMIN, NET_RAW (for traceroute/ping)
+For development and testing information, see [DEPLOY.md](DEPLOY.md).
 
 ---
 
