@@ -127,7 +127,10 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
           size: isOwnNode ? 14 : 12,
           bold: isOwnNode,
         },
-        level: level, // Used for hierarchical layout
+        level: level, // Used for positioning
+        fixed: isOwnNode ? { x: true, y: true } : false, // Fix your node at center
+        x: isOwnNode ? 0 : undefined, // Center position
+        y: isOwnNode ? 0 : undefined,
         title: `${node.label}\nDistance: ${level} hop${level !== 1 ? 's' : ''}`,
       };
     });
@@ -156,20 +159,10 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       };
     });
 
-    // Zenmap-style hierarchical radial layout options
+    // Zenmap-style radial layout with physics
     const options = {
       layout: {
-        hierarchical: {
-          enabled: true,
-          levelSeparation: 200,
-          nodeSpacing: 150,
-          treeSpacing: 200,
-          blockShifting: true,
-          edgeMinimization: true,
-          parentCentralization: true,
-          direction: 'UD', // Up-Down (your node at top)
-          sortMethod: 'directed',
-        },
+        randomSeed: 42, // Consistent layout
       },
       nodes: {
         font: {
@@ -189,7 +182,7 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       edges: {
         smooth: {
           enabled: true,
-          type: 'cubicBezier',
+          type: 'dynamic',
           roundness: 0.5,
         },
         arrows: {
@@ -206,7 +199,21 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
         },
       },
       physics: {
-        enabled: false, // Disable physics for stable hierarchical layout
+        enabled: true,
+        barnesHut: {
+          gravitationalConstant: -8000, // Strong gravity to center
+          centralGravity: 0.8, // Pull toward center (your node)
+          springLength: 200, // Distance between connected nodes
+          springConstant: 0.02,
+          damping: 0.3,
+          avoidOverlap: 0.5,
+        },
+        stabilization: {
+          enabled: true,
+          iterations: 300,
+          updateInterval: 50,
+        },
+        solver: 'barnesHut',
       },
       interaction: {
         hover: true,
