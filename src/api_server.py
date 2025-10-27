@@ -259,6 +259,26 @@ def trigger_traceroute():
                         
                         logger.info(f"API: Merged topology now has {len(graph.nodes)} nodes, {len(graph.edges)} edges")
                         
+                        # Get external IP for adding as source node
+                        from src.nat_detection import detect_nat_and_external_ip
+                        try:
+                            _, external_ip = detect_nat_and_external_ip()
+                            if external_ip:
+                                # Add YOUR NODE as the source of this traceroute
+                                graph.add_node(external_ip, f"{external_ip} (YOU)")
+                                
+                                # Connect your node to first hop
+                                if len(hops) > 0:
+                                    first_hop = hops[0]
+                                    graph.add_edge(
+                                        external_ip,
+                                        first_hop.ip_address,
+                                        rtt_ms=first_hop.rtt_ms
+                                    )
+                                    logger.info(f"API: Added source node {external_ip} connected to first hop")
+                        except Exception as e:
+                            logger.warning(f"API: Could not add source node: {e}")
+                        
                         # Generate timestamped backup
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         output_file = OUTPUT_DIR / f"topology_{timestamp}.gexf"
