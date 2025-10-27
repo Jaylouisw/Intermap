@@ -91,10 +91,35 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
     const hierarchy = calculateHierarchy();
     const maxLevel = Math.max(...Object.values(hierarchy), 0);
     
+    // Pre-calculate radial positions for true Zenmap ring layout
+    const nodesByLevel = {};
+    data.nodes.forEach(node => {
+      const level = hierarchy[node.id] || maxLevel + 1;
+      if (!nodesByLevel[level]) nodesByLevel[level] = [];
+      nodesByLevel[level].push(node);
+    });
+    
+    // Assign radial positions (rings)
+    const nodePositions = {};
+    Object.keys(nodesByLevel).forEach(level => {
+      const nodes = nodesByLevel[level];
+      const radius = parseInt(level) * 250; // 250px per hop level
+      const angleStep = (2 * Math.PI) / nodes.length;
+      
+      nodes.forEach((node, index) => {
+        const angle = index * angleStep;
+        nodePositions[node.id] = {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle),
+        };
+      });
+    });
+    
     // Prepare data for vis.js with Zenmap-style radial layout
     const nodes = data.nodes.map(node => {
       const isOwnNode = ownNodeIp && node.id === ownNodeIp;
       const level = hierarchy[node.id] || maxLevel + 1;
+      const position = nodePositions[node.id] || { x: 0, y: 0 };
       
       // Color nodes based on network distance (Zenmap style)
       let nodeColor = '#4488ff'; // Default blue
@@ -120,17 +145,17 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
           },
         },
         shape: isOwnNode ? 'star' : 'dot', // Star for your node like Zenmap
-        size: isOwnNode ? 35 : Math.max(25 - (level * 3), 15), // Larger = closer
+        size: isOwnNode ? 35 : Math.max(25 - (level * 2), 12), // Larger = closer
         borderWidth: isOwnNode ? 4 : 2,
         font: { 
           color: '#ffffff', 
-          size: isOwnNode ? 14 : 12,
+          size: isOwnNode ? 14 : 11,
           bold: isOwnNode,
         },
-        level: level, // Used for positioning
-        fixed: isOwnNode ? { x: true, y: true } : false, // Fix your node at center
-        x: isOwnNode ? 0 : undefined, // Center position
-        y: isOwnNode ? 0 : undefined,
+        level: level,
+        x: position.x, // Pre-calculated radial position
+        y: position.y,
+        fixed: isOwnNode ? { x: true, y: true } : false, // Only fix your node
         title: `${node.label}\nDistance: ${level} hop${level !== 1 ? 's' : ''}`,
       };
     });
@@ -159,7 +184,7 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       };
     });
 
-    // Zenmap-style radial layout with physics
+    // Zenmap-style radial layout with manual positioning
     const options = {
       layout: {
         randomSeed: 42, // Consistent layout
@@ -171,57 +196,48 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
         },
         borderWidth: 2,
         borderWidthSelected: 4,
-        shadow: {
-          enabled: true,
-          color: 'rgba(0,0,0,0.5)',
-          size: 10,
-          x: 5,
-          y: 5,
-        },
+        shadow: false, // Disable shadows for performance
       },
       edges: {
         smooth: {
           enabled: true,
-          type: 'dynamic',
-          roundness: 0.5,
+          type: 'continuous', // Simpler smooth type for performance
         },
         arrows: {
           to: {
             enabled: false,
           },
         },
-        shadow: {
-          enabled: true,
-          color: 'rgba(0,0,0,0.3)',
-          size: 5,
-          x: 3,
-          y: 3,
-        },
+        shadow: false, // Disable shadows for performance
       },
       physics: {
         enabled: true,
-        barnesHut: {
-          gravitationalConstant: -8000, // Strong gravity to center
-          centralGravity: 0.8, // Pull toward center (your node)
-          springLength: 200, // Distance between connected nodes
-          springConstant: 0.02,
-          damping: 0.3,
-          avoidOverlap: 0.5,
-        },
         stabilization: {
           enabled: true,
-          iterations: 300,
-          updateInterval: 50,
+          iterations: 50, // Very few iterations since we pre-positioned
+          updateInterval: 10,
         },
+        barnesHut: {
+          gravitationalConstant: -1000, // Weak gravity, just for minor adjustments
+          centralGravity: 0.01,
+          springLength: 250,
+          springConstant: 0.0005, // Very weak springs
+          damping: 0.9, // Heavy damping for quick stabilization
+          avoidOverlap: 1.0,
+        },
+        minVelocity: 1.0, // Stop physics quickly
         solver: 'barnesHut',
+        timestep: 0.35,
       },
       interaction: {
         hover: true,
-        tooltipDelay: 100,
+        tooltipDelay: 200,
         navigationButtons: true,
         keyboard: true,
         zoomView: true,
         dragView: true,
+        hideEdgesOnDrag: true, // Hide edges while dragging for performance
+        hideEdgesOnZoom: false,
       },
     };
 
