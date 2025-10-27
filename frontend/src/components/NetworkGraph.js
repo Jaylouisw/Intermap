@@ -34,7 +34,7 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
     if (!data || !containerRef.current) return;
 
     const nodeCount = data.nodes.length;
-    const enableClustering = nodeCount > 100; // Enable clustering for large graphs
+    const enableClustering = false; // Disabled by default - show all nodes
     
     console.log(`Network has ${nodeCount} nodes. Clustering: ${enableClustering ? 'enabled' : 'disabled'}`);
 
