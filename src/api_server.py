@@ -260,9 +260,9 @@ def trigger_traceroute():
                         logger.info(f"API: Merged topology now has {len(graph.nodes)} nodes, {len(graph.edges)} edges")
                         
                         # Get external IP for adding as source node
-                        from src.nat_detection import detect_nat_and_external_ip
+                        from src.nat_detection import detect_nat
                         try:
-                            _, external_ip = detect_nat_and_external_ip()
+                            _, local_ip, external_ip = detect_nat()
                             if external_ip:
                                 # Add YOUR NODE as the source of this traceroute
                                 graph.add_node(external_ip, f"{external_ip} (YOU)")
