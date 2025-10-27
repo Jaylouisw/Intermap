@@ -33,6 +33,11 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
   useEffect(() => {
     if (!data || !containerRef.current) return;
 
+    const nodeCount = data.nodes.length;
+    const enableClustering = nodeCount > 100; // Enable clustering for large graphs
+    
+    console.log(`Network has ${nodeCount} nodes. Clustering: ${enableClustering ? 'enabled' : 'disabled'}`);
+
     // Calculate network hierarchy (distance from your node) - Zenmap style
     const calculateHierarchy = () => {
       const distances = {};
@@ -88,8 +93,8 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       return distances;
     };
     
-    const hierarchy = calculateHierarchy();
-    const maxLevel = Math.max(...Object.values(hierarchy), 0);
+  const hierarchy = calculateHierarchy();
+  const maxLevel = Object.keys(hierarchy).length ? Math.max(...Object.values(hierarchy)) : 0;
     
     // Pre-calculate radial positions for true Zenmap ring layout
     const nodesByLevel = {};
@@ -99,92 +104,125 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       nodesByLevel[level].push(node);
     });
     
-    // Assign radial positions (rings)
+    // Assign radial positions (rings) — deterministic concentric rings like Zenmap
     const nodePositions = {};
-    Object.keys(nodesByLevel).forEach(level => {
-      const nodes = nodesByLevel[level];
-      const radius = parseInt(level) * 250; // 250px per hop level
-      const angleStep = (2 * Math.PI) / nodes.length;
-      
+    const baseRadius = 150; // Zenmap-style compact rings
+    Object.keys(nodesByLevel).forEach(levelKey => {
+      const level = parseInt(levelKey, 10);
+      const nodes = nodesByLevel[levelKey];
+      const radius = level === 0 ? 0 : level * baseRadius; // center node at origin
+      const angleStep = (2 * Math.PI) / Math.max(nodes.length, 1);
+
       nodes.forEach((node, index) => {
-        const angle = index * angleStep;
-        nodePositions[node.id] = {
-          x: radius * Math.cos(angle),
-          y: radius * Math.sin(angle),
-        };
+        if (level === 0) {
+          // Center node at origin
+          nodePositions[node.id] = { x: 0, y: 0 };
+        } else {
+          const angle = index * angleStep - Math.PI / 2; // start from top
+          nodePositions[node.id] = {
+            x: Math.round(radius * Math.cos(angle)),
+            y: Math.round(radius * Math.sin(angle)),
+          };
+        }
       });
     });
     
     // Prepare data for vis.js with Zenmap-style radial layout
+    // Determine node types and colors. If the node has attributes.type use it, otherwise heuristics
+    const TYPE_COLORS = {
+      participant: '#00ff00',  // Bright green (Zenmap center node style)
+      iperf: '#9370db',        // Medium purple
+      dns: '#00bfff',          // Deep sky blue
+      router: '#ffa500',       // Orange
+      switch: '#a9a9a9',       // Dark gray
+      unknown: '#4169e1',      // Royal blue
+    };
+
+    const isPrivateIP = (ip) => {
+      if (!ip) return false;
+      // Basic IPv4 private checks
+      return /^10\.|^192\.168\.|^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip);
+    };
+
     const nodes = data.nodes.map(node => {
       const isOwnNode = ownNodeIp && node.id === ownNodeIp;
       const level = hierarchy[node.id] || maxLevel + 1;
       const position = nodePositions[node.id] || { x: 0, y: 0 };
-      
-      // Color nodes based on network distance (Zenmap style)
-      let nodeColor = '#4488ff'; // Default blue
-      if (isOwnNode) {
-        nodeColor = '#00ff00'; // Green for your node (Zenmap center)
-      } else if (level === 1) {
-        nodeColor = '#ffff00'; // Yellow for direct neighbors
-      } else if (level === 2) {
-        nodeColor = '#ff8800'; // Orange for 2 hops away
-      } else if (level >= 3) {
-        nodeColor = '#ff4444'; // Red for distant nodes
+
+      const attrs = node.attributes || {};
+      // prefer explicit type attribute if present
+      let type = (attrs.type && String(attrs.type).toLowerCase()) || null;
+
+      if (!type) {
+        // heuristics
+        const id = String(node.id || '').toLowerCase();
+        const label = String(node.label || '').toLowerCase();
+        if (id === ownNodeIp || label.includes('you')) type = 'participant';
+        else if (label.includes('iperf') || label.includes('speedtest')) type = 'iperf';
+        else if (['1.1.1.1', '8.8.8.8', '8.8.4.4', '9.9.9.9', '208.67.222.222', '208.67.220.220'].includes(id)) type = 'dns';
+        else if (isPrivateIP(id)) type = 'switch';
+        else type = 'router';
       }
-      
+
+      const nodeColor = TYPE_COLORS[type] || TYPE_COLORS.unknown;
+
       return {
         id: node.id,
         label: isOwnNode ? `${node.label}\n(YOU)` : node.label,
         color: {
-          background: nodeColor,
+          background: isOwnNode ? '#00ff00' : nodeColor,
           border: isOwnNode ? '#00ff00' : '#ffffff',
           highlight: {
-            background: nodeColor,
-            border: '#00ffff',
+            background: isOwnNode ? '#66ff66' : nodeColor,
+            border: '#ffff00', // Yellow highlight border (Zenmap style)
           },
         },
-        shape: isOwnNode ? 'star' : 'dot', // Star for your node like Zenmap
-        size: isOwnNode ? 35 : Math.max(25 - (level * 2), 12), // Larger = closer
-        borderWidth: isOwnNode ? 4 : 2,
-        font: { 
-          color: '#ffffff', 
-          size: isOwnNode ? 14 : 11,
+        shape: isOwnNode ? 'star' : 'dot',
+        size: isOwnNode ? 30 : Math.max(20 - (level * 1.2), 8), // Zenmap-style sizing
+        borderWidth: isOwnNode ? 3 : 1.5,
+        font: {
+          color: '#ffffff',
+          size: isOwnNode ? 13 : 9,
           bold: isOwnNode,
+          face: 'arial',
         },
         level: level,
-        x: position.x, // Pre-calculated radial position
+        x: position.x,
         y: position.y,
-        fixed: isOwnNode ? { x: true, y: true } : false, // Only fix your node
-        title: `${node.label}\nDistance: ${level} hop${level !== 1 ? 's' : ''}`,
+        fixed: { x: true, y: true }, // fix every node to the precomputed position for stable rings
+        title: `${node.label}\nType: ${type}\nDistance: ${level} hop${level !== 1 ? 's' : ''}`,
       };
     });
 
     const edges = data.edges.map((edge, index) => {
-      const bandwidth = edge.bandwidth_mbps;
+      const bandwidth = edge.bandwidth_download_mbps || edge.bandwidth_mbps || null;
       const color = getBandwidthColor(bandwidth);
-      const width = bandwidth ? Math.min(Math.log10(bandwidth) + 1, 10) : 2;
-      
+      const width = bandwidth ? Math.min(Math.log10(bandwidth) + 1, 6) : 1; // Thinner edges for Zenmap look
+
+      const titleLines = [];
+      if (edge.rtt_ms != null) titleLines.push(`RTT: ${Number(edge.rtt_ms).toFixed(2)} ms`);
+      if (edge.bandwidth_download_mbps != null) titleLines.push(`DL: ${Number(edge.bandwidth_download_mbps).toFixed(2)} Mbps`);
+      if (edge.bandwidth_upload_mbps != null) titleLines.push(`UL: ${Number(edge.bandwidth_upload_mbps).toFixed(2)} Mbps`);
+      const title = titleLines.length ? titleLines.join('\n') : 'No metrics available';
+
       return {
         id: index,
         from: edge.from,
         to: edge.to,
-        color: { 
+        color: {
           color: color,
-          opacity: 0.6,
+          opacity: 0.6, // Semi-transparent like Zenmap
         },
         width: width,
         smooth: {
-          type: 'curvedCW',
-          roundness: 0.2,
+          type: 'continuous', // Straight lines like Zenmap
+          enabled: false,
         },
-        title: bandwidth 
-          ? `Bandwidth: ${bandwidth.toFixed(2)} Mbps\nLatency: ${edge.rtt_ms?.toFixed(2) || 'N/A'} ms`
-          : `Latency: ${edge.rtt_ms?.toFixed(2) || 'N/A'} ms`,
+        title,
       };
     });
 
-    // Zenmap-style radial layout with manual positioning
+    // Zenmap-style radial layout with manual positioning (physics disabled for smooth pan/zoom)
     const options = {
       layout: {
         randomSeed: 42, // Consistent layout
@@ -192,16 +230,16 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       nodes: {
         font: {
           color: '#ffffff',
-          size: 12,
+          size: 10,
+          face: 'arial',
         },
-        borderWidth: 2,
-        borderWidthSelected: 4,
+        borderWidth: 1.5,
+        borderWidthSelected: 3,
         shadow: false, // Disable shadows for performance
       },
       edges: {
         smooth: {
-          enabled: true,
-          type: 'continuous', // Simpler smooth type for performance
+          enabled: false, // Straight lines for performance and Zenmap look
         },
         arrows: {
           to: {
@@ -211,23 +249,7 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
         shadow: false, // Disable shadows for performance
       },
       physics: {
-        enabled: true,
-        stabilization: {
-          enabled: true,
-          iterations: 50, // Very few iterations since we pre-positioned
-          updateInterval: 10,
-        },
-        barnesHut: {
-          gravitationalConstant: -1000, // Weak gravity, just for minor adjustments
-          centralGravity: 0.01,
-          springLength: 250,
-          springConstant: 0.0005, // Very weak springs
-          damping: 0.9, // Heavy damping for quick stabilization
-          avoidOverlap: 1.0,
-        },
-        minVelocity: 1.0, // Stop physics quickly
-        solver: 'barnesHut',
-        timestep: 0.35,
+        enabled: false, // disable physics entirely because we pre-position nodes on rings
       },
       interaction: {
         hover: true,
@@ -250,6 +272,46 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
 
     networkRef.current = network;
 
+    // Enable clustering for large graphs (>100 nodes)
+    if (enableClustering) {
+      console.log('Enabling clustering for large topology...');
+      
+      // Cluster distant nodes (level 3+) for performance
+      const clusterByLevel = (level) => {
+        const clusterOptionsByLevel = {
+          processProperties: (clusterOptions, childNodes, childEdges) => {
+            let totalMass = 0;
+            for (let i = 0; i < childNodes.length; i++) {
+              totalMass += childNodes[i].mass || 1;
+            }
+            clusterOptions.mass = totalMass;
+            return clusterOptions;
+          },
+          clusterNodeProperties: {
+            id: `cluster_level_${level}`,
+            label: `${childNodes => childNodes.length} nodes\n(${level} hops)`,
+            shape: 'database',
+            color: '#555555',
+            font: { color: '#ffffff', size: 12 },
+          },
+        };
+        
+        network.cluster({
+          joinCondition: (nodeOptions) => {
+            return nodeOptions.level >= level;
+          },
+          ...clusterOptionsByLevel,
+        });
+      };
+      
+      // Cluster level 4+ nodes if graph is very large
+      if (nodeCount > 200) {
+        clusterByLevel(4);
+      } else if (nodeCount > 100) {
+        clusterByLevel(5);
+      }
+    }
+
     // Event handlers
     network.on('click', (params) => {
       if (params.nodes.length > 0) {
@@ -264,7 +326,7 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
         networkRef.current.destroy();
       }
     };
-  }, [data]);
+  }, [data, ownNodeIp]);
 
   return (
     <div

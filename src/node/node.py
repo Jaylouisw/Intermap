@@ -283,17 +283,23 @@ class TopologyNode:
                         logger.info(f"✓ Fetched {len(iperf3_hosts)} unique iperf3 server hosts from GitHub")
                         self.trace_targets.update(iperf3_hosts)
                         
+                        # Mark iperf3 servers in the graphs
+                        self.iperf3_servers = set(iperf3_hosts)
+                        
                         # Log sample
                         if iperf3_hosts:
                             logger.info(f"Sample servers: {', '.join(iperf3_hosts[:5])}")
                     else:
                         logger.warning("No iperf3 servers fetched - using config only")
+                        self.iperf3_servers = set()
                         
                 except Exception as e:
                     logger.error(f"Failed to fetch iperf3 servers from GitHub: {e}")
                     logger.info("Continuing with config targets only")
+                    self.iperf3_servers = set()
             else:
                 logger.warning("iperf3 fetcher not available - using config targets only")
+                self.iperf3_servers = set()
             
             logger.info(f"Total trace targets loaded: {len(self.trace_targets)}")
             if self.trace_targets:
@@ -871,11 +877,17 @@ class TopologyNode:
                         
                         if hops:
                             # Add YOUR NODE as the source of the traceroute
-                            self.local_graph.add_node(self.external_ip, f"{self.external_ip} (YOU)")
+                            self.local_graph.add_node(
+                                self.external_ip, 
+                                f"{self.external_ip} (YOU)",
+                                is_participant=True
+                            )
                             
                             # Add ALL hops to local graph (for user's own visualization)
                             for i, hop in enumerate(hops):
-                                self.local_graph.add_node(hop.ip_address, hop.hostname)
+                                # Check if this is an iperf3 server
+                                is_iperf = hop.ip_address in self.iperf3_servers if hasattr(self, 'iperf3_servers') else False
+                                self.local_graph.add_node(hop.ip_address, hop.hostname, is_iperf=is_iperf)
                                 
                                 if i == 0:
                                     # Connect YOUR NODE to the first hop
@@ -894,14 +906,19 @@ class TopologyNode:
                                     )
                             
                             # Add YOUR NODE to public graph too (as the scan origin)
-                            self.network_graph.add_node(self.external_ip, f"{self.external_ip} (YOU)")
+                            self.network_graph.add_node(
+                                self.external_ip, 
+                                f"{self.external_ip} (YOU)",
+                                is_participant=True
+                            )
                             
                             # Add ONLY public IPs to network graph (for IPFS sharing)
                             public_hops_discovered = []
                             for i, hop in enumerate(hops):
                                 # Skip private IPs for shared graph
                                 if not is_private_ip(hop.ip_address):
-                                    self.network_graph.add_node(hop.ip_address, hop.hostname)
+                                    is_iperf = hop.ip_address in self.iperf3_servers if hasattr(self, 'iperf3_servers') else False
+                                    self.network_graph.add_node(hop.ip_address, hop.hostname, is_iperf=is_iperf)
                                     public_hops_discovered.append(hop.ip_address)
                                     
                                     # Connect to previous public hop (or YOUR NODE if first public hop)

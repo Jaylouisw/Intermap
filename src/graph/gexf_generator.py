@@ -7,6 +7,7 @@ Licensed under CC-BY-NC-SA 4.0
 GEXF file generator for network topology visualization
 """
 import logging
+import ipaddress
 from typing import List, Dict
 from datetime import datetime
 from xml.etree.ElementTree import Element, SubElement, tostring, ElementTree
@@ -187,6 +188,48 @@ class GEXFGenerator:
         """
         self.graph = graph
     
+    def _detect_node_type(self, node_id: str, node_data: Dict) -> str:
+        """
+        Detect the semantic type of a node based on IP and attributes.
+        
+        Args:
+            node_id: Node IP address
+            node_data: Node data dictionary
+            
+        Returns:
+            Node type: participant, iperf, dns, router, switch, or unknown
+        """
+        hostname = (node_data.get("hostname") or "").lower()
+        
+        # Check if explicitly marked as participant
+        if node_data.get("is_participant"):
+            return "participant"
+        
+        # iperf3 servers (known hostnames or marked)
+        if "iperf" in hostname or "speedtest" in hostname or node_data.get("is_iperf"):
+            return "iperf"
+        
+        # Known public DNS servers
+        known_dns = {
+            "1.1.1.1", "1.0.0.1",  # Cloudflare
+            "8.8.8.8", "8.8.4.4",  # Google
+            "9.9.9.9", "149.112.112.112",  # Quad9
+            "208.67.222.222", "208.67.220.220",  # OpenDNS
+        }
+        if node_id in known_dns or "dns" in hostname:
+            return "dns"
+        
+        # Private IPs are typically local switches/routers
+        try:
+            ip_obj = ipaddress.ip_address(node_id)
+            if ip_obj.is_private:
+                return "switch"
+        except:
+            pass
+        
+        # Default to router for public IPs
+        return "router"
+    
     def _categorize_bandwidth(self, bandwidth_mbps: float = None) -> tuple:
         """
         Categorize bandwidth and return category name and color.
@@ -259,6 +302,16 @@ class GEXFGenerator:
         attr_hostname.set("title", "hostname")
         attr_hostname.set("type", "string")
         
+        attr_type = SubElement(node_attributes, "attribute")
+        attr_type.set("id", "1")
+        attr_type.set("title", "type")
+        attr_type.set("type", "string")
+        
+        attr_participant = SubElement(node_attributes, "attribute")
+        attr_participant.set("id", "2")
+        attr_participant.set("title", "is_participant")
+        attr_participant.set("type", "boolean")
+        
         # Add edge attributes definitions (for RTT and bandwidth)
         edge_attributes = SubElement(graph_elem, "attributes")
         edge_attributes.set("class", "edge")
@@ -290,11 +343,27 @@ class GEXFGenerator:
             node.set("id", node_id)
             node.set("label", node_data.get("hostname", node_id))
             
+            # Detect node type
+            node_type = self._detect_node_type(node_id, node_data)
+            
             # Add node attributes
             attvalues = SubElement(node, "attvalues")
-            attvalue = SubElement(attvalues, "attvalue")
-            attvalue.set("for", "0")
-            attvalue.set("value", node_data.get("hostname", node_id))
+            
+            # Hostname
+            attvalue_hostname = SubElement(attvalues, "attvalue")
+            attvalue_hostname.set("for", "0")
+            attvalue_hostname.set("value", node_data.get("hostname", node_id))
+            
+            # Type
+            attvalue_type = SubElement(attvalues, "attvalue")
+            attvalue_type.set("for", "1")
+            attvalue_type.set("value", node_type)
+            
+            # Is participant flag
+            is_participant = str(node_data.get("is_participant", False)).lower()
+            attvalue_participant = SubElement(attvalues, "attvalue")
+            attvalue_participant.set("for", "2")
+            attvalue_participant.set("value", is_participant)
         
         # Add edges with RTT and bandwidth
         edges_elem = SubElement(graph_elem, "edges")

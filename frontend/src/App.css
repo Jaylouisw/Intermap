@@ -24,6 +24,24 @@
   white-space: nowrap;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-actions button {
+  background: transparent;
+  color: #00ff88;
+  border: 1px solid rgba(0,255,136,0.15);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.header-actions button:hover {
+  background: rgba(0,255,136,0.06);
+}
+
 .traceroute-input {
   display: flex;
   gap: 0.5rem;
@@ -110,6 +128,19 @@
   overflow: hidden;
   min-height: 0;
 }
+
+/* header dropdown containers */
+.header-dropdown {
+  position: absolute;
+  top: 70px;
+  z-index: 200;
+  display: flex;
+  gap: 1rem;
+  pointer-events: auto;
+}
+
+.header-dropdown-left { left: 1rem; }
+.header-dropdown-right { right: 1rem; }
 
 .own-node-info {
   position: absolute;

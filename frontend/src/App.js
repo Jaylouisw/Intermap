@@ -21,16 +21,16 @@ function App() {
     participants: 0
   });
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [showLegend, setShowLegend] = useState(false);
+  const [showControls, setShowControls] = useState(false);
   const [targetInput, setTargetInput] = useState('');
   const [tracing, setTracing] = useState(false);
 
   useEffect(() => {
     loadNodeInfo();
     loadTopologyData();
-    
-    // Refresh data every 30 seconds
-    const interval = setInterval(loadTopologyData, 30000);
-    return () => clearInterval(interval);
+    // NOTE: Auto-refresh removed per UX request. Use manual Reload button.
+    return () => {};
   }, []);
 
   const loadNodeInfo = async () => {
@@ -194,7 +194,10 @@ function App() {
     <div className="App">
       <header className="header">
         <h1>🗺️ Intermap - Internet Topology Viewer</h1>
-        
+        <div className="header-actions">
+          <button onClick={() => setShowLegend(s => !s)} aria-expanded={showLegend}>Legend</button>
+          <button onClick={() => setShowControls(s => !s)} aria-expanded={showControls}>Controls</button>
+        </div>
         <div className="traceroute-input">
           <input
             type="text"
@@ -233,40 +236,54 @@ function App() {
       <div className="graph-container">
         <NetworkGraph data={graphData} ownNodeIp={ownNodeIp} />
         
-        {/* Zenmap-style network distance legend */}
-        <div className="network-legend">
-          <h4>Network Distance (Zenmap Style)</h4>
-          <div className="legend-item">
-            <span className="legend-color" style={{backgroundColor: '#00ff00'}}></span>
-            <span>Your Node (Center)</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{backgroundColor: '#ffff00'}}></span>
-            <span>1 Hop Away</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{backgroundColor: '#ff8800'}}></span>
-            <span>2 Hops Away</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-color" style={{backgroundColor: '#ff4444'}}></span>
-            <span>3+ Hops Away</span>
-          </div>
-        </div>
-        
-        <BandwidthLegend />
-        
-        {ownNodeIp && (
-          <div className="own-node-info">
-            ⭐ Your node: <strong>{ownNodeIp}</strong> (green star at center)
+        {/* Header dropdowns for legend and controls (collapsed by default) */}
+        {showLegend && (
+          <div className="header-dropdown header-dropdown-left">
+            <div className="network-legend">
+              <h4>Node Types</h4>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#00ff00'}}></span>
+                <span>Your Node / Participant</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#9370db'}}></span>
+                <span>iperf3 Server</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#00bfff'}}></span>
+                <span>DNS Server</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#ffa500'}}></span>
+                <span>Router</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#a9a9a9'}}></span>
+                <span>Switch / Private Hop</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color" style={{backgroundColor: '#4169e1'}}></span>
+                <span>Unknown Device</span>
+              </div>
+            </div>
+            <BandwidthLegend />
           </div>
         )}
-        
-        <div className="controls">
-          <h3>Controls</h3>
-          <button onClick={handleReload}>Reload Data</button>
-          <button onClick={handleExport}>Export GEXF</button>
-        </div>
+
+        {showControls && (
+          <div className="header-dropdown header-dropdown-right">
+            <div className="controls">
+              <h3>Controls</h3>
+              <button onClick={handleReload}>Reload Data</button>
+              <button onClick={handleExport}>Export GEXF</button>
+            </div>
+            {ownNodeIp && (
+              <div className="own-node-info">
+                ⭐ Your node: <strong>{ownNodeIp}</strong> (green star at center)
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
