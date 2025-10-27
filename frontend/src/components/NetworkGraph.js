@@ -42,6 +42,11 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       // Find your node or use first node as center
       const centerNode = ownNodeIp || data.nodes[0]?.id;
       
+      console.log('Center node:', centerNode);
+      console.log('Own node IP:', ownNodeIp);
+      console.log('First node:', data.nodes[0]?.id);
+      console.log('All node IDs:', data.nodes.map(n => n.id).slice(0, 10));
+      
       if (!centerNode) return distances;
       
       // BFS to calculate distances
@@ -49,6 +54,7 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
       queue.push(centerNode);
       visited.add(centerNode);
       
+      let edgeCount = 0;
       while (queue.length > 0) {
         const current = queue.shift();
         const currentDist = distances[current];
@@ -58,8 +64,10 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
           let neighbor = null;
           if (edge.from === current && !visited.has(edge.to)) {
             neighbor = edge.to;
+            edgeCount++;
           } else if (edge.to === current && !visited.has(edge.from)) {
             neighbor = edge.from;
+            edgeCount++;
           }
           
           if (neighbor) {
@@ -69,6 +77,13 @@ const NetworkGraph = ({ data, ownNodeIp }) => {
           }
         });
       }
+      
+      console.log('Hierarchy calculated:', distances);
+      console.log('Edges processed:', edgeCount);
+      console.log('Distance breakdown:', Object.values(distances).reduce((acc, dist) => {
+        acc[dist] = (acc[dist] || 0) + 1;
+        return acc;
+      }, {}));
       
       return distances;
     };
